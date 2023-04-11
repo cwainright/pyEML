@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.pyEML.emld &mdash; pyEML 0.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            pyEML
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyEML</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.pyEML.emld</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.pyEML.emld</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Python source module for working with EML-styled metadata</span>
+
+<span class="sd">`emld2.py` holds all constants, variables, classes, methods, and functions necessary to</span>
+<span class="sd">instantiate an `Emld` from EML-valid xml. A user can then create, read, edit, and delete  </span>
+<span class="sd">`Emld` nodes to produce or append metadata. Finally, a user can build outputs, </span>
+<span class="sd">like an .xml document for submission with a dataset deliverable.</span>
+
+<span class="sd">Authored: 2023-04-07</span>
+<span class="sd">Author: Charles Wainright</span>
+<span class="sd">Entity: US National Park Service</span>
+<span class="sd">License: MIT, license information at end of file</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">lxml.etree</span> <span class="k">as</span> <span class="nn">etree</span>
+
+<div class="viewcode-block" id="Emld"><a class="viewcode-back" href="../../../pyEML.html#src.pyEML.emld.Emld">[docs]</a><span class="k">class</span> <span class="nc">Emld</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;A container that holds data parsed from an EML-formatted xml file.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">NPS</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">INTERACTIVE</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructor for class Emld</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">        filepath (str): Filepath and name for the source-xml that is parsed to an element tree.</span>
+<span class="sd">        NPS (bool): True means NPS is the author of the xml.</span>
+<span class="sd">        INTERACTIVE (bool): Turns on status messages and overwrite detection. True is for interactive sessions. Shows status messages, asks user for permission before overwriting.</span>
+<span class="sd">        False is for automated scripting. Silences status messages and writes metadata verbatim as scripted.</span>
+<span class="sd">        </span>
+<span class="sd">        Attributes:</span>
+<span class="sd">        xml_src (str): Filepath and name for the source-xml that is parsed to an element tree.</span>
+<span class="sd">        nps (bool): Turns on NPS-specific data package requirements. True: NPS is the author of the xml. `_set_by_for_nps()` - does NOT execute if kwarg self.nps == False.</span>
+<span class="sd">        `_set_npspublisher()` - does NOT execute if kwarg self.nps == False.</span>
+<span class="sd">        interactive (bool): Turns on status messages and overwrite detection. True is for interactive sessions. Show status messages, ask user for permission before overwriting.</span>
+<span class="sd">        False is for automated scripting. Silence status messages and write metadata verbatim as scripted.</span>
+<span class="sd">        tree (lxml.etree._ElementTree): an lxml element tree containing data parsed from self.xmlstring.</span>
+<span class="sd">        root (lxml.etree._Element): the root node of self.tree.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xml_src</span> <span class="o">=</span> <span class="n">filepath</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nps</span> <span class="o">=</span> <span class="n">NPS</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span> <span class="o">=</span> <span class="n">INTERACTIVE</span>
+            
+            <span class="c1"># filename = &#39;C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/2023/20230210_iss135_emleditor/sandbox/testinput.xml&#39;</span>
+            <span class="n">parser</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XMLParser</span><span class="p">(</span><span class="n">remove_blank_text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">parser</span><span class="p">)</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="n">tree</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>
+
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;exception&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Emld.get_title"><a class="viewcode-back" href="../../../pyEML.html#src.pyEML.emld.Emld.get_title">[docs]</a>    <span class="k">def</span> <span class="nf">get_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretty</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the dataset&#39;s title </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            pretty (bool, optional): True returns pretty-printed version. Defaults to False.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            Exception: _description_</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: If pretty == True</span>
+<span class="sd">            lxml.etree.Element: If pretty == False</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">        ```</span>
+<span class="sd">        myemld.get_title(pretty=True)</span>
+<span class="sd">        myemld.set_title(title=&#39;my new title&#39;)</span>
+<span class="sd">        myemld.get_title(pretty=True)</span>
+<span class="sd">        myemld.delete_title()</span>
+<span class="sd">        myemld.get_title(pretty=True)</span>
+<span class="sd">        ```</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset/title&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset/title&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">title_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;./dataset/title&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">pretty</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Dataset title:&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">title_element</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">title_element</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset/title&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">title_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset/title&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your dataset has multiple nodes named &quot;title&quot;:&#39;</span><span class="p">)</span>
+                <span class="n">counter</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">elm</span> <span class="ow">in</span> <span class="n">title_element</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">counter</span><span class="si">}</span><span class="s1">. </span><span class="si">{</span><span class="n">elm</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Suggested solutions:&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;1. Use `delete_title()` to clear your dataset</span><span class="se">\&#39;</span><span class="s1">s title and retry `set_title()`.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;2. Edit your xml file and remove repeated dataset/title nodes.&#39;</span><span class="p">)</span>
+
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your dataset does not have a title. Use `set_title()` to resolve this problem.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Emld.set_title"><a class="viewcode-back" href="../../../pyEML.html#src.pyEML.emld.Emld.set_title">[docs]</a>    <span class="k">def</span> <span class="nf">set_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the dataset&#39;s title</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">        title (str): The title that you want to assign to your dataset.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">        ```</span>
+<span class="sd">        myemld.get_title(pretty=True)</span>
+<span class="sd">        myemld.set_title(title=&#39;my new title&#39;)</span>
+<span class="sd">        myemld.get_title(pretty=True)</span>
+<span class="sd">        myemld.delete_title()</span>
+<span class="sd">        myemld.get_title(pretty=True)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">title_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_title</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">title_element</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your dataset already has a title:&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">title_element</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+                    <span class="n">overwrite</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you want to overwrite your dataset&#39;s title? &#39;y&#39; and enter to overwrite, any other key to keep title.&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;User input: </span><span class="si">{</span><span class="n">overwrite</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">overwrite</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+                        <span class="n">force</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;`set_title()` stopped. Kept original title.&#39;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">get_title</span><span class="p">(</span><span class="n">pretty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">force</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">force</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span> <span class="o">==</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">force</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset&#39;</span><span class="p">):</span>
+                    <span class="n">dataset_element</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="s1">&#39;dataset&#39;</span><span class="p">)</span>
+                <span class="n">dataset_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset_element</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">dataset_element</span> <span class="o">=</span> <span class="n">dataset_element</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_title</span><span class="p">()</span> <span class="c1"># will return the exception about a dataset having zero or more than one title node</span>
+                <span class="k">if</span> <span class="n">title_element</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">delete_title</span><span class="p">(</span><span class="n">quiet</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">title_element</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
+                <span class="n">title_element</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">title</span>
+                <span class="n">dataset_element</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">title_element</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_title</span><span class="p">(</span><span class="n">pretty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;set title problem&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Emld.delete_title"><a class="viewcode-back" href="../../../pyEML.html#src.pyEML.emld.Emld.delete_title">[docs]</a>    <span class="k">def</span> <span class="nf">delete_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quiet</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete value(s) from dataset title node(s)</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">        quiet (bool): Override self.interactive to turn off messages for this method.</span>
+<span class="sd">        </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            myemld.get_title(pretty=True)</span>
+<span class="sd">            myemld.set_title(title=&#39;my new title&#39;)</span>
+<span class="sd">            myemld.get_title(pretty=True)</span>
+<span class="sd">            myemld.delete_title()</span>
+<span class="sd">            myemld.get_title(pretty=True)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_title</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># if there&#39;s no title, this redirect to show &quot;there is no title&quot; exception in self.get_title()</span>
+            <span class="k">if</span> <span class="n">quiet</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Warning! Your dataset has one or more title nodes:&#39;</span><span class="p">)</span>
+                <span class="n">counter</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">elm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset/title&#39;</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">counter</span><span class="si">}</span><span class="s1">. </span><span class="si">{</span><span class="n">elm</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">overwrite</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Do you want to delete title node(s)? &quot;y&quot; and enter to delete, any other key to abort.&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">overwrite</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">elm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset/title&#39;</span><span class="p">):</span>
+                        <span class="n">elm</span><span class="o">.</span><span class="n">getparent</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elm</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Title deletion aborted.&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_title</span><span class="p">(</span><span class="n">pretty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span> <span class="o">==</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">quiet</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">elm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;./dataset/title&#39;</span><span class="p">):</span>
+                        <span class="n">elm</span><span class="o">.</span><span class="n">getparent</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elm</span><span class="p">)</span></div>
+            
+<div class="viewcode-block" id="Emld.write_eml"><a class="viewcode-back" href="../../../pyEML.html#src.pyEML.emld.Emld.write_eml">[docs]</a>    <span class="k">def</span> <span class="nf">write_eml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write EML-formatted xml file</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">        filename (str): the filename and filepath where you want to save your EML-formatted xml.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">        ```</span>
+<span class="sd">        tree.write(&#39;test_output.xml&#39;, pretty_print=True)</span>
+<span class="sd">        ```</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xml&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your filename must end in the .xml file extension&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xml_declaration</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">)</span></div></div>
+
+<span class="sd">&quot;&quot;&quot;Copyright (C) 2023 Charles Wainright, US National Park Service</span>
+
+<span class="sd">Permission is hereby granted, free of charge, to any person obtaining a copy of</span>
+<span class="sd">this software and associated documentation files (the &quot;Software&quot;), to deal in</span>
+<span class="sd">the Software without restriction, including without limitation the rights to</span>
+<span class="sd">use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies</span>
+<span class="sd">of the Software, and to permit persons to whom the Software is furnished to do</span>
+<span class="sd">so, subject to the following conditions:</span>
+
+<span class="sd">The above copyright notice and this permission notice shall be included in all</span>
+<span class="sd">copies or substantial portions of the Software.</span>
+
+<span class="sd">THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
+<span class="sd">IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
+<span class="sd">FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE</span>
+<span class="sd">AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</span>
+<span class="sd">LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</span>
+<span class="sd">OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</span>
+<span class="sd">SOFTWARE.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Charles Wainright, US National Park Service.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
