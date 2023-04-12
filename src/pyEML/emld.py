@@ -72,9 +72,11 @@ class Emld():
         """
 
         try:
-            node_text = './dataset/title'
+            node_xpath = './dataset/title'
             node_target= 'title'
-            self._get_node(node_text=node_text, node_target=node_target, pretty=pretty)
+            node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty)
+            if node: # only returns an object if pretty == False
+                return node
         except:
             print('problem get_title')
 
@@ -92,40 +94,9 @@ class Emld():
             myemld.get_title(pretty=True)
         """
         try:
-            force = False
-            # if self.interactive == True:
-            #     if self.get_title() is not None:
-            #         title_element = self.get_title()
-            #         if len(title_element) == 0:
-            #             self.get_title() # returns no title exception
-            #         elif len(title_element) == 1:
-            #             print('Your dataset already has a title:')
-            #             print(title_element[0].text)
-            #             overwrite = input("Do you want to overwrite your dataset's title? ('y' to overwrite / 'n' to cancel)\n\n")
-            #             print(f'User input: {overwrite}\n')
-            #             if overwrite.lower() == 'y':
-            #                 force = True
-            #             else:
-            #                 print('`set_title()` stopped. Kept original title.')
-            #                 self.get_title(pretty=True)
-            #                 force = False
-            #         elif len(title_element) > 1:
-            #             print('Your dataset has multiple title nodes. Use `delete_title()` and then try `set_title()` again.')
-            #     else:
-            #         force = True
-            if self.interactive == False or force == True or self.get_title() is None:
-                if self.get_title() is not None:
-                    self.delete_title(quiet=True)
-                if not self.root.findall('./dataset'):
-                    dataset_element = etree.SubElement(self.root, 'dataset')
-                dataset_element = self.root.findall('./dataset')
-                if len(dataset_element) != 1:
-                    raise Exception
-                title_element = etree.SubElement(dataset_element, 'title')
-                title_element.text = title
-                if self.interactive == True:
-                    print('Dataset title updated:')
-                    self.get_title(pretty=True)
+            node_xpath = './dataset/title'
+            node_target= 'title'
+            self._set_node(values=title, node_target=node_target, node_xpath=node_xpath)
         except:
             print('set title problem')
 
@@ -143,9 +114,9 @@ class Emld():
             myemld.get_title(pretty=True)
         """
         
-        node_text = './dataset/title'
+        node_xpath = './dataset/title'
         node_target= 'title'
-        self._delete_node(node_text=node_text, node_target=node_target, quiet=quiet)  
+        self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
             
     def get_creator(self, pretty:bool=False):
         """Get information about the dataset's creator
@@ -157,20 +128,22 @@ class Emld():
             myemld.get_creator()
         """
         try:
-            node_text = './dataset/creator'
+            node_xpath = './dataset/creator'
             node_target= 'creator'
-            self._get_node(node_text=node_text, node_target=node_target, pretty=pretty)
+            node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty)
+            if node: # only returns an object if pretty == False
+                return node
         except:
-            return None
+            print('problem get_creator')
 
     def set_creator(self, creator:str):
         pass
 
     def delete_creator(self, quiet:bool=True):
         try:
-            node_text = './dataset/creator'
+            node_xpath = './dataset/creator'
             node_target= 'creator'
-            self._delete_node(node_text=node_text, node_target=node_target, quiet=quiet)  
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
 
         except:
             print('error')
@@ -222,11 +195,11 @@ class Emld():
         #     print(f'{indents}</{node.tag}>')
         # serialize(testroot)
 
-    def _delete_node(self, node_text:str, node_target:str, quiet:bool=False):
+    def _delete_node(self, node_xpath:str, node_target:str, quiet:bool=False):
         """A helper method that deletes the value(s) at a node
 
         Args:
-            node_text (str): _description_
+            node_xpath (str): _description_
             node_target (str): _description_
             quiet (bool, optional): _description_. Defaults to False.
 
@@ -234,7 +207,7 @@ class Emld():
             error_classes.MissingNodeException: _description_
         """
         try:
-            node = self._get_node(node_text=node_text, node_target=node_target, pretty=False)
+            node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False)
             if node is None or len(node) == 0:
                 raise MissingNodeException(node_target)
             else:
@@ -274,11 +247,11 @@ class Emld():
         except MissingNodeException as e:
             print(e.msg)
         
-    def _get_node(self, node_text:str, node_target:str, pretty:bool):
+    def _get_node(self, node_xpath:str, node_target:str, pretty:bool):
         """A helper method that retrieves the value(s) at a node
 
         Args:
-            node_text (str): _description_
+            node_xpath (str): _description_
             node_target (str): _description_
             pretty (bool): _description_
 
@@ -289,11 +262,13 @@ class Emld():
             _type_: _description_
         """
         try:
-            node = self.root.findall(node_text)
+            node = self.root.findall(node_xpath)
             if len(node) == 0:
                 raise MissingNodeException(node_target)
             else:
-                if pretty == True:
+                if pretty == False:
+                    return node
+                else:
                     if len(node) == 1:
                         for child in node:
                             self._serialize(child)
@@ -301,27 +276,57 @@ class Emld():
                         for child in node:
                             for element in child:
                                 self._serialize(element)
-                else:
-                    return node
         except MissingNodeException as e:
             print(e.msg)
 
-    def _set_node(self, values:dict, node_text:str, node_target:str):
+    def _set_node(self, values:dict, node_target:str, node_xpath:str):
         """A helper method that sets the value(s) at a node
 
         Args:
-            node_text (str): _description_
+            node_xpath (str): _description_
             node_target (str): _description_
         """
         try:
-            self._delete_node(node_text=node_text, node_target=node_target, quiet=True)
-            node = self._get_node(node_text=node_text, node_target=node_target, pretty=False)
-            for k, v in values:
-                new_element = etree.Element(k)
-                new_element.text = v
+            # if there's already a node at `node_target`, delete it
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
+            # if there's not a node at `node_target`, need to find crawl xpath to add missing nodes
+            node_list = node_xpath.split('/')[1:]
+
+            pass
                 
         except:
-            print('set_node problem')
+            print('error')
+    
+    def _find_parents(self, node_xpath:str):
+        """Helper method that traverses upstream in an element tree to find each parent node above a `node_target`
+
+        Args:
+            node_xpath (str): an xpath to a node in an element tree
+
+        Returns:
+            list: Each list element is the xpath for one parent-node upstream from the `node_target`
+
+        Examples:
+            node_xpath = './dataset/title'
+            myemld._find_parents(node_xpath)
+        """
+        parent_nodes = []
+        mylist = node_xpath.split('/')
+        mylist = mylist[1:]
+        self._reverse_serialize(mylist, parent_nodes)
+        return parent_nodes
+
+    def _reverse_serialize(self, mylist:list, parent_nodes:list):
+
+        listcopy = mylist
+        prefix = './' # xpath prefix
+        newstring = prefix + '/'.join(mylist)
+        parent_nodes.append(newstring)
+        if len(listcopy) > 1:
+            listcopy.pop()
+            self._reverse_serialize(listcopy, parent_nodes)
+
+
     
     def write_eml(self, filename:str):
         """Write EML-formatted xml file
