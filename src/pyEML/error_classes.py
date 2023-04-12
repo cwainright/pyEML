@@ -179,7 +179,7 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-class MissingNodeException(Error):
+class MissingNodeException(Exception):
     '''
     # Sub-class of `Error` that handles Missing nodes
 

@@ -162,19 +162,6 @@ class Emld():
             self._get_node(node_text=node_text, node_target=node_target, pretty=pretty)
         except:
             return None
-        # try:
-        #     if not self.root.findall('./dataset/creator'):
-        #             raise Exception
-        #     else:
-        #         node = self.root.findall('./dataset/creator')
-        #         if pretty == True:
-        #             for element in node:
-        #                 self._crawl_node(element)
-        #         else:
-        #             return node
-        # except:
-        #     print('Your dataset does not have a creator. Use `set_creator()` to resolve this problem.')
-        #     return None
 
     def set_creator(self, creator:str):
         pass
@@ -187,7 +174,7 @@ class Emld():
         except:
             return None
     
-    def _crawl_node(self, node, depth=0):
+    def _serialize(self, node, depth=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 
         Args:
@@ -197,7 +184,7 @@ class Emld():
         Examples:
             # crawl a single node
             testroot = myemld.root.find('./dataset/creator') # returns a lxml.etree._Element
-            _crawl_node(testroot)
+            myemld._serialize(testroot)
 
             # crawl multiple nodes
             testroot = myemld.root.findall('./dataset') # returns a list of lxml.etree._Element
@@ -217,11 +204,11 @@ class Emld():
                     print(f'{spaces}        {elm.text}')
                     print(f'{spaces}    </{elm.tag}>')
                 else:
-                    self._crawl_node(elm, depth+1)
+                    self._serialize(elm, depth+1)
             print(f'{spaces}</{node.tag}>')
 
         # testroot = myemld.root.find('./dataset/creator')
-        # def crawl_node(node, depth=0):
+        # def serialize(node, depth=0):
         #     indents = depth * '    '
         #     print(f'{indents}<{node.tag}>')
         #     for elm in node:
@@ -230,9 +217,9 @@ class Emld():
         #             print(f'{indents}            {elm.text}')
         #             print(f'{indents}    </{elm.tag}>')
         #         else:
-        #             crawl_node(elm, depth+1)
+        #             serialize(elm, depth+1)
         #     print(f'{indents}</{node.tag}>')
-        # crawl_node(testroot)
+        # serialize(testroot)
 
     def _delete_node(self, node_text:str, node_target:str, quiet:bool=False):
         """A helper method that deletes the value(s) at a node
@@ -299,22 +286,20 @@ class Emld():
         try:
             node = self.root.findall(node_text)
             if node is None:
-                raise error_classes.MissingNodeException
+                raise error_classes.MissingNodeException(node_target)
             else:
                 if pretty == True:
                     if len(node) == 1:
                         for child in node:
-                            self._crawl_node(child)
+                            self._serialize(child)
                     else:
                         for child in node:
                             for element in child:
-                                self._crawl_node(element)
+                                self._serialize(element)
                 else:
                     return node
-        except error_classes.MissingNodeException:
-            myerror = error_classes.MissingNodeException(node_target)
-            if self.interactive == True:
-                print(myerror.msg)
+        except error_classes.MissingNodeException as e:
+            print(e.msg)
 
     def _set_node(self, node_text:str, node_target:str):
         """A helper method that sets the value(s) at a node
