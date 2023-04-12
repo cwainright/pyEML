@@ -12,7 +12,7 @@ License: MIT, license information at end of file
 """
 
 import lxml.etree as etree
-import src.pyEML.error_classes as error_classes
+from src.pyEML.error_classes import bcolors, MissingNodeException
 
 class Emld():
     """A container that holds data parsed from an EML-formatted xml file."""
@@ -76,7 +76,7 @@ class Emld():
             node_target= 'title'
             self._get_node(node_text=node_text, node_target=node_target, pretty=pretty)
         except:
-            return None
+            print('problem get_title')
 
     def set_title(self, title:str):
         """Set the dataset's title
@@ -168,11 +168,12 @@ class Emld():
 
     def delete_creator(self, quiet:bool=True):
         try:
-            node_text = './dataset/title'
-            node_target= 'title'
-            self._get_node(node_text=node_text, node_target=node_target, pretty=False)
+            node_text = './dataset/creator'
+            node_target= 'creator'
+            self._delete_node(node_text=node_text, node_target=node_target, quiet=quiet)  
+
         except:
-            return None
+            print('error')
     
     def _serialize(self, node, depth=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
@@ -183,7 +184,7 @@ class Emld():
 
         Examples:
             # crawl a single node
-            testroot = myemld.root.find('./dataset/creator') # returns a lxml.etree._Element
+            testroot = myemld.root.find('./dataset/creator') # returns one lxml.etree._Element
             myemld._serialize(testroot)
 
             # crawl multiple nodes
@@ -234,25 +235,33 @@ class Emld():
         """
         try:
             node = self._get_node(node_text=node_text, node_target=node_target, pretty=False)
-            if node is None:
-                raise error_classes.MissingNodeException
-            if node is not None:
+            if node is None or len(node) == 0:
+                raise MissingNodeException(node_target)
+            else:
                 if quiet == True:
                         pass
                 elif self.interactive == True:
-                    print(f'Warning! Your dataset has one or {node_target} nodes:')
+                    if len(node) == 1:
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset already has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
+                    if len(node) > 1:
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
                     counter = 1
                     for elm in node:
-                        print(f'{counter}. {elm.text}')
-                        counter += 1
-                    overwrite = input('Do you want to delete these node(s)? ("y" to delete, "n" to cancel.)')
+                        if len(node) <=1:
+                            self._serialize(elm)
+                        if len(node) >1:
+                            print(f'{counter}:')
+                            self._serialize(elm)
+                            counter += 1
+
+                    overwrite = input(f'{bcolors.BOLD}Do you want to delete these node(s)?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
                     print(f'User input: {overwrite}')
                     if overwrite.lower() == 'y':
                         force = True
-                        print('Deleting nodes...')
+                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deleted.')
                     else:
                         force = False
-                        print(f'`{node_target}` deletion cancelled.')
+                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deletion cancelled.')
                 if self.interactive == False or quiet == True or force == True:
                     if len(node) == 1:
                         for child in node:
@@ -261,14 +270,10 @@ class Emld():
                         for child in node:
                             for elm in child:
                                 elm.getparent().remove(elm)
-                if self.interactive == True:
-                    self._get_node(node_text=node_text, node_target=node_target, pretty=True)
-        except error_classes.MissingNodeException:
-            myerror = error_classes.MissingNodeException(problem_val=node_target)
-            if self.interactive == True:
-                print(myerror.msg)
         
-
+        except MissingNodeException as e:
+            print(e.msg)
+        
     def _get_node(self, node_text:str, node_target:str, pretty:bool):
         """A helper method that retrieves the value(s) at a node
 
@@ -285,8 +290,8 @@ class Emld():
         """
         try:
             node = self.root.findall(node_text)
-            if node is None:
-                raise error_classes.MissingNodeException(node_target)
+            if len(node) == 0:
+                raise MissingNodeException(node_target)
             else:
                 if pretty == True:
                     if len(node) == 1:
@@ -298,17 +303,25 @@ class Emld():
                                 self._serialize(element)
                 else:
                     return node
-        except error_classes.MissingNodeException as e:
+        except MissingNodeException as e:
             print(e.msg)
 
-    def _set_node(self, node_text:str, node_target:str):
+    def _set_node(self, values:dict, node_text:str, node_target:str):
         """A helper method that sets the value(s) at a node
 
         Args:
             node_text (str): _description_
             node_target (str): _description_
         """
-        pass
+        try:
+            self._delete_node(node_text=node_text, node_target=node_target, quiet=True)
+            node = self._get_node(node_text=node_text, node_target=node_target, pretty=False)
+            for k, v in values:
+                new_element = etree.Element(k)
+                new_element.text = v
+                
+        except:
+            print('set_node problem')
     
     def write_eml(self, filename:str):
         """Write EML-formatted xml file
