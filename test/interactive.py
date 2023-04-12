@@ -12,6 +12,7 @@ myemld = Emld(filepath=filename, INTERACTIVE=True)
 # myemld.root
 
 myemld.get_title(pretty=True)
+myemld.get_title()
 mynode = myemld.get_title(pretty=False)
 myemld.set_title(title='my new title')
 myemld.get_title(pretty=True)
@@ -22,8 +23,15 @@ myemld.get_creator(pretty=True)
 myemld.get_creator()
 myemld.delete_creator(quiet=False)
 
+node_xpath = './dataset/creator/individualName/givenName'
+myemld._find_parents(node_xpath)
 
-node_text = './dataset/title'
-myemld._find_parents(node_text)
+myemld.set_title(title="mynewtitle")
+|
+node_xpath = './dataset/title'
+myemld._find_parents(node_xpath=node_xpath)
 
-
+myvalue = {'title': 'mynewtitle'}
+for value in myvalue:
+    print(value)
+    print(myvalue[value])

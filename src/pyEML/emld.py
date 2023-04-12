@@ -96,7 +96,11 @@ class Emld():
         try:
             node_xpath = './dataset/title'
             node_target= 'title'
-            self._set_node(values=title, node_target=node_target, node_xpath=node_xpath)
+            values = {'title': title}
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath)
+            if self.interactive == True:
+                print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_title(pretty=True)
         except:
             print('set title problem')
 
@@ -283,17 +287,25 @@ class Emld():
         """A helper method that sets the value(s) at a node
 
         Args:
-            node_xpath (str): _description_
-            node_target (str): _description_
+            values (any): the values to be added to the `node_xpath`
+            node_xpath (str): xpath for the node to which values will be added
+            node_target (str): text name of the node; for f-string generation
         """
         try:
             # if there's already a node at `node_target`, delete it
             self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
             # if there's not a node at `node_target`, need to find crawl xpath to add missing nodes
-            node_list = node_xpath.split('/')[1:]
-
-            pass
-                
+            node_list = self._find_parents(node_xpath=node_xpath)
+            node_check = []
+            for element in node_list:
+                nodeset = self.root.xpath(element)
+                for node in nodeset:
+                    node_check.append((etree.iselement(node))) # check that every node upstream of `node_xpath` exists
+            if all(node_check): # if all upstream nodes exist, make child element(s)
+                parent_node = self.root.xpath(node_list[0])[0]
+                for value in values:
+                    new_node = etree.SubElement(parent_node, value)
+                    new_node.text = values[value]
         except:
             print('error')
     
@@ -311,23 +323,26 @@ class Emld():
             myemld._find_parents(node_xpath)
         """
         parent_nodes = []
-        mylist = node_xpath.split('/')
-        mylist = mylist[1:]
-        self._reverse_serialize(mylist, parent_nodes)
+        xpath_split = node_xpath.split('/')
+        xpath_split = xpath_split[1:-1]
+        self._reverse_serialize(xpath_split, parent_nodes)
         return parent_nodes
 
-    def _reverse_serialize(self, mylist:list, parent_nodes:list):
+    def _reverse_serialize(self, xpath_split:list, parent_nodes:list):
+        """Helper method that recursively builds xpaths from a list of node names
 
-        listcopy = mylist
+        Args:
+            xpath_split (list): a list of node names parsed from an element tree xpath in `_find_parents()`
+            parent_nodes (list): a list of xpaths recursively concatenated from each element in `xpath_split`
+        """
+        listcopy = xpath_split
         prefix = './' # xpath prefix
-        newstring = prefix + '/'.join(mylist)
+        newstring = prefix + '/'.join(xpath_split)
         parent_nodes.append(newstring)
         if len(listcopy) > 1:
             listcopy.pop()
             self._reverse_serialize(listcopy, parent_nodes)
 
-
-    
     def write_eml(self, filename:str):
         """Write EML-formatted xml file
         
