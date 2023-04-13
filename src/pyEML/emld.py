@@ -14,9 +14,9 @@ License: MIT, license information at end of file
 import lxml.etree as etree
 from src.pyEML.error_classes import bcolors, MissingNodeException
 
-# const `LOOKUPS` holds abstracted EML-schema information that a node's get, set, and delete methods need
-# to build variables for function calls. This abstraction lets the engineer maintain EML-node specifics in
-# one place, `LOOKUPS`, instead of in individual function calls.
+# const `LOOKUPS` holds abstracted EML-schema information that an `Emld` get, set, and delete methods need
+# to build variables. This abstraction lets the engineer maintain EML-node specifics in
+# one place, `LOOKUPS`, instead of in individual methods.
 LOOKUPS = {
     'title': {
         'node_xpath': './dataset/title',
@@ -117,14 +117,22 @@ class Emld():
             myemld.delete_title()
             myemld.get_title(pretty=True)
         """
-        node_xpath = LOOKUPS['title']['node_xpath']
-        node_target= LOOKUPS['title']['node_target']
-        values = LOOKUPS['title']['values_dict']
-        values['title'] = title
-        self._set_node(values=values, node_target=node_target, node_xpath=node_xpath)
-        if self.interactive == True:
-            print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
-            self.get_title(pretty=True)
+        try:
+            node_xpath = LOOKUPS['title']['node_xpath']
+            node_target= LOOKUPS['title']['node_target']
+            values = LOOKUPS['title']['values_dict']
+            assert title not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". `title` cannot be blank.'
+            assert len(title) >= 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". {bcolors.BOLD}`title`{bcolors.ENDC} must be at least three characters.'
+
+            values['title'] = title
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_title(pretty=True)
+        
+        except AssertionError as a:
+            print(a)
 
     def delete_title(self, quiet:bool=False):
         """Delete value(s) from dataset title node(s)
@@ -161,8 +169,29 @@ class Emld():
         except:
             print('problem get_creator')
 
-    def set_creator(self, creator:str):
-        pass
+    def set_creator(self, first:str=None, last:str=None, org:str=None, email:str=None):
+        try:
+            node_xpath = LOOKUPS['creator']['node_xpath']
+            node_target= LOOKUPS['creator']['node_target']
+            values = LOOKUPS['creator']['values_dict']
+
+            if first is not None or '':
+                values['individualName']['givenName'] = first
+            if last is not None or '':
+                values['individualName']['surName'] = last
+            if org is not None or '':
+                values['organizationName'] = org
+            if email is not None or '':
+                values['electronicMailAddress'] = org
+
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
+
+            cleanvals = self._delete_none(values)
+
+            print(cleanvals)
+            
+        except:
+            print('error set_creator')
 
     def delete_creator(self, quiet:bool=True):
         try:
@@ -380,6 +409,23 @@ class Emld():
             listcopy.pop()
             self._reverse_serialize(listcopy, parent_nodes)
 
+    def _delete_none(self, _dict):
+        """Delete None values recursively from all of the dictionaries"""
+        # adapted from https://stackoverflow.com/questions/33797126/proper-way-to-remove-keys-in-dictionary-with-none-values-in-python
+        for key, value in list(_dict.items()):
+            if isinstance(value, dict):
+                self._delete_none(value)
+            elif value == '':
+                del _dict[key]
+            elif value is None:
+                del _dict[key]
+            elif isinstance(value, list):
+                for v_i in value:
+                    if isinstance(v_i, dict):
+                        self._delete_none(v_i)
+
+            return _dict
+    
     def write_eml(self, filename:str):
         """Write EML-formatted xml file
         
