@@ -173,22 +173,24 @@ class Emld():
         try:
             node_xpath = LOOKUPS['creator']['node_xpath']
             node_target= LOOKUPS['creator']['node_target']
-            values = LOOKUPS['creator']['values_dict']
+            dirty_vals = LOOKUPS['creator']['values_dict']
 
-            if first is not None or '':
-                values['individualName']['givenName'] = first
-            if last is not None or '':
-                values['individualName']['surName'] = last
-            if org is not None or '':
-                values['organizationName'] = org
-            if email is not None or '':
-                values['electronicMailAddress'] = org
+            if first not in (None, ''):
+                dirty_vals['individualName']['givenName'] = first
+            if last not in (None, ''):
+                dirty_vals['individualName']['surName'] = last
+            if org not in (None, ''):
+                dirty_vals['organizationName'] = org
+            if email not in (None, ''):
+                dirty_vals['electronicMailAddress'] = org
 
-            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
+            # self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
 
-            cleanvals = self._delete_none(values)
-
-            print(cleanvals)
+            cleanvals = self._delete_none(dirty_vals)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_creator(pretty=True)
             
         except:
             print('error set_creator')
@@ -270,50 +272,46 @@ class Emld():
         """
         try:
             node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=True) 
-        except:
-            print()
-        else:
-            try:
-                if node is None or len(node) == 0:
-                    if quiet == False:
-                        raise MissingNodeException(node_target)
-                else:
-                    if quiet == True:
-                            pass
-                    elif self.interactive == True:
-                        if len(node) == 1:
-                            print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset already has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
-                        if len(node) > 1:
-                            print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
-                        counter = 1
-                        for elm in node:
-                            if len(node) <=1:
-                                self._serialize(elm)
-                            if len(node) >1:
-                                print(f'{counter}:')
-                                self._serialize(elm)
-                                counter += 1
+            if node is None or len(node) == 0:
+                if quiet == False:
+                    raise MissingNodeException(node_target)
+            else:
+                if quiet == True:
+                        pass
+                elif self.interactive == True:
+                    if len(node) == 1:
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset already has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
+                    if len(node) > 1:
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
+                    counter = 1
+                    for elm in node:
+                        if len(node) <=1:
+                            self._serialize(elm)
+                        if len(node) >1:
+                            print(f'{counter}:')
+                            self._serialize(elm)
+                            counter += 1
 
-                        overwrite = input(f'{bcolors.BOLD}Do you want to delete these node(s)?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
-                        print(f'User input: {overwrite}')
-                        if overwrite.lower() == 'y':
-                            force = True
-                            print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deleted.')
-                        else:
-                            force = False
-                            print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deletion cancelled.')
-                    if self.interactive == False or quiet == True or force == True:
-                        if len(node) == 1:
-                            for child in node:
-                                child.getparent().remove(child)
-                        else:
-                            for child in node:
-                                for elm in child:
-                                    elm.getparent().remove(elm)
+                    overwrite = input(f'{bcolors.BOLD}Do you want to delete these node(s)?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
+                    print(f'User input: {overwrite}')
+                    if overwrite.lower() == 'y':
+                        force = True
+                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deleted.')
+                    else:
+                        force = False
+                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deletion cancelled.')
+                if self.interactive == False or quiet == True or force == True:
+                    if len(node) == 1:
+                        for child in node:
+                            child.getparent().remove(child)
+                    else:
+                        for child in node:
+                            for elm in child:
+                                elm.getparent().remove(elm)
             
-            except MissingNodeException as e:
-                if quiet == False or self.interactive == True:
-                    print(e.msg)
+        except MissingNodeException as e:
+            if quiet == False or self.interactive == True:
+                print(e.msg)
             
     def _get_node(self, node_xpath:str, node_target:str, pretty:bool, quiet:bool=False):
         """Get the value(s) at a node
@@ -369,9 +367,11 @@ class Emld():
                     node_check.append((etree.iselement(node))) # check that every node upstream of `node_xpath` exists
             if all(node_check): # if all upstream nodes exist, make child element(s)
                 parent_node = self.root.xpath(node_list[0])[0]
-                for value in values:
-                    new_node = etree.SubElement(parent_node, value)
-                    new_node.text = values[value]
+                self._serialize_nodes(_dict = values, parent_node=parent_node)
+                # for key, value in list(values.items()):
+                #     if isinstance(value, (float, int, str)):
+                #         new_node = etree.SubElement(parent_node, key)
+                #         new_node.text = values[key]
         except:
             print('error')
     
@@ -390,7 +390,7 @@ class Emld():
         """
         parent_nodes = []
         xpath_split = node_xpath.split('/')
-        xpath_split = xpath_split[1:-1]
+        xpath_split = xpath_split[1:]
         self._reverse_serialize(xpath_split, parent_nodes)
         return parent_nodes
 
@@ -409,13 +409,33 @@ class Emld():
             listcopy.pop()
             self._reverse_serialize(listcopy, parent_nodes)
 
+    def _serialize_nodes(self, _dict:dict, parent_node:etree._Element):
+        """Build `etree.SubElement`s from key-value pairs in a dictionary
+
+        Args:
+            _dict (dict): A dictionary of key-value pairs. Keys are mapped to element.tag and values are mapped to element.text unless otherwise specified.
+            parent_node (etree._Element): The parent element to which child nodes need to be serially added
+        """
+        for key, value in list(_dict.items()):
+            if isinstance(value, (float, int, str)):
+                new_node = etree.SubElement(parent_node, key)
+                new_node.text = _dict[key]
+            elif isinstance(value, dict):
+                new_node = etree.SubElement(parent_node, key)
+                self._serialize_nodes(value, new_node)
+            elif isinstance(value, list):
+                for v_i in value:
+                    new_node = etree.SubElement(parent_node, key)
+                    if isinstance(v_i, dict):
+                        self._serialize_nodes(v_i, new_node)
+    
     def _delete_none(self, _dict):
         """Delete None values recursively from all of the dictionaries"""
         # adapted from https://stackoverflow.com/questions/33797126/proper-way-to-remove-keys-in-dictionary-with-none-values-in-python
         for key, value in list(_dict.items()):
             if isinstance(value, dict):
                 self._delete_none(value)
-            elif value == '':
+            elif value in ('', None, 'None'):
                 del _dict[key]
             elif value is None:
                 del _dict[key]
@@ -424,7 +444,7 @@ class Emld():
                     if isinstance(v_i, dict):
                         self._delete_none(v_i)
 
-            return _dict
+        return _dict
     
     def write_eml(self, filename:str):
         """Write EML-formatted xml file
