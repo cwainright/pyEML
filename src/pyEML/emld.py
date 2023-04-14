@@ -192,10 +192,13 @@ class Emld():
             if email not in (None, ''):
                 dirty_vals['electronicMailAddress'] = org
 
-            # self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
 
             cleanvals = self._delete_none(dirty_vals)
-            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
                 self.get_creator(pretty=True)
@@ -297,7 +300,7 @@ class Emld():
                                 elm.getparent().remove(elm)
                 else:
                     if len(node) == 1:
-                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset already has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
                     if len(node) > 1:
                         print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
                     counter = 1
@@ -381,7 +384,7 @@ class Emld():
             else:
                 node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=quiet)
                 if len(node) == 1:
-                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset already has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
+                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
                 if len(node) > 1:
                     print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
                 counter = 1
@@ -410,7 +413,8 @@ class Emld():
                     node_check.append((etree.iselement(node))) # check that every node upstream of `node_xpath` exists
             if all(node_check): # if all upstream nodes exist, make child element(s)
                 parent_node = nodeset[0]
-                self._serialize_nodes(_dict = values, parent_node=parent_node)
+                target_node = etree.SubElement(parent_node, node_target)
+                self._serialize_nodes(_dict = values, target_node=target_node)
                 # for key, value in list(values.items()):
                 #     if isinstance(value, (float, int, str)):
                 #         new_node = etree.SubElement(parent_node, key)
@@ -452,7 +456,7 @@ class Emld():
             listcopy.pop()
             self._reverse_serialize(listcopy, parent_nodes)
 
-    def _serialize_nodes(self, _dict:dict, parent_node:etree._Element):
+    def _serialize_nodes(self, _dict:dict, target_node:etree._Element):
         """Build `etree.SubElement`s from key-value pairs in a dictionary
 
         Args:
@@ -461,16 +465,16 @@ class Emld():
         """
         for key, value in list(_dict.items()):
             if isinstance(value, (float, int, str)):
-                new_node = etree.SubElement(parent_node, key)
-                new_node.text = _dict[key]
+                child_node = etree.SubElement(target_node, key)
+                child_node.text = _dict[key]
             elif isinstance(value, dict):
-                new_node = etree.SubElement(parent_node, key)
-                self._serialize_nodes(value, new_node)
+                child_node = etree.SubElement(target_node, key)
+                self._serialize_nodes(value, child_node)
             elif isinstance(value, list):
                 for v_i in value:
-                    new_node = etree.SubElement(parent_node, key)
+                    child_node = etree.SubElement(target_node, key)
                     if isinstance(v_i, dict):
-                        self._serialize_nodes(v_i, new_node)
+                        self._serialize_nodes(v_i, child_node)
     
     def _delete_none(self, _dict):
         """Delete None values recursively from all of the dictionaries"""
