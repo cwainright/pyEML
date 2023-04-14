@@ -125,8 +125,12 @@ class Emld():
             assert len(title) >= 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". {bcolors.BOLD}`title`{bcolors.ENDC} must be at least three characters.'
 
             values['title'] = title
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
 
-            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath)
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
                 self.get_title(pretty=True)
@@ -134,7 +138,7 @@ class Emld():
         except AssertionError as a:
             print(a)
 
-    def delete_title(self, quiet:bool=False):
+    def delete_title(self):
         """Delete value(s) from dataset title node(s)
         
         Args:
@@ -149,6 +153,10 @@ class Emld():
         """
         node_xpath = LOOKUPS['title']['node_xpath']
         node_target= LOOKUPS['title']['node_target']
+        if self.interactive == True:
+            quiet=False
+        else:
+            quiet=True
         self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
             
     def get_creator(self, pretty:bool=False):
@@ -195,10 +203,14 @@ class Emld():
         except:
             print('error set_creator')
 
-    def delete_creator(self, quiet:bool=True):
+    def delete_creator(self):
         try:
             node_xpath = './dataset/creator'
             node_target= 'creator'
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
             self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
 
         except:
@@ -251,7 +263,7 @@ class Emld():
         #     print(f'{indents}</{node.tag}>')
         # serialize(testroot)
 
-    def _delete_node(self, node_xpath:str, node_target:str, quiet:bool=False):
+    def _delete_node(self, node_xpath:str, node_target:str, quiet:bool):
         """Deletes the value(s) at a node
 
         Args:
@@ -273,12 +285,17 @@ class Emld():
         try:
             node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=True) 
             if node is None or len(node) == 0:
-                if quiet == False:
-                    raise MissingNodeException(node_target)
+                raise MissingNodeException(node_target)
             else:
                 if quiet == True:
-                        pass
-                elif self.interactive == True:
+                    if len(node) == 1:
+                        for child in node:
+                            child.getparent().remove(child)
+                    else:
+                        for child in node:
+                            for elm in child:
+                                elm.getparent().remove(elm)
+                else:
                     if len(node) == 1:
                         print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset already has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
                     if len(node) > 1:
@@ -295,25 +312,27 @@ class Emld():
                     overwrite = input(f'{bcolors.BOLD}Do you want to delete these node(s)?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
                     print(f'User input: {overwrite}')
                     if overwrite.lower() == 'y':
-                        force = True
-                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deleted.')
-                    else:
-                        force = False
-                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deletion cancelled.')
-                if self.interactive == False or quiet == True or force == True:
-                    if len(node) == 1:
                         for child in node:
                             child.getparent().remove(child)
+                        # if len(node) == 0:
+                            
+                        # elif len(node) == 1:
+                        #     for child in node:
+                        #         child.getparent().remove(child)
+                        # else:
+                        #     for child in node:
+                        #         child.getparent().remove(child)
+                        #         for elm in child:
+                        #             elm.getparent().remove(elm)
+                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deleted.')
                     else:
-                        for child in node:
-                            for elm in child:
-                                elm.getparent().remove(elm)
-            
+                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deletion cancelled.')
+
         except MissingNodeException as e:
-            if quiet == False or self.interactive == True:
+            if quiet == False:
                 print(e.msg)
             
-    def _get_node(self, node_xpath:str, node_target:str, pretty:bool, quiet:bool=False):
+    def _get_node(self, node_xpath:str, node_target:str, pretty:bool, quiet:bool=True):
         """Get the value(s) at a node
 
         Args:
@@ -344,10 +363,10 @@ class Emld():
                 else:
                     return node
         except MissingNodeException as e:
-            if quiet == False or self.interactive == True:
+            if quiet == False:
                 print(e.msg)
         
-    def _set_node(self, values:dict, node_target:str, node_xpath:str):
+    def _set_node(self, values:dict, node_target:str, node_xpath:str, quiet:bool):
         """Set the value(s) at a node
 
         Args:
@@ -357,16 +376,40 @@ class Emld():
         """
         try:
             # if there's already a node at `node_target`, delete it
-            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=False)
+            if quiet == True:
+                self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)
+            else:
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=quiet)
+                if len(node) == 1:
+                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset already has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
+                if len(node) > 1:
+                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
+                counter = 1
+                for elm in node:
+                    if len(node) <=1:
+                        self._serialize(elm)
+                    if len(node) >1:
+                        print(f'{counter}:')
+                        self._serialize(elm)
+                        counter += 1
+
+                overwrite = input(f'{bcolors.BOLD}Do you want to delete these node(s)?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
+                print(f'User input: {overwrite}')
+                if overwrite.lower() == 'y':
+                    self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
+                else:
+                    print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` set cancelled.')
+
+            
             # if there's not a node at `node_target`, need to find crawl xpath to add missing nodes
-            node_list = self._find_parents(node_xpath=node_xpath)
+            node_list = self._find_parents(node_xpath=node_xpath)[1:]
             node_check = []
             for element in node_list:
-                nodeset = self.root.xpath(element)
+                nodeset = self.root.findall(element)
                 for node in nodeset:
                     node_check.append((etree.iselement(node))) # check that every node upstream of `node_xpath` exists
             if all(node_check): # if all upstream nodes exist, make child element(s)
-                parent_node = self.root.xpath(node_list[0])[0]
+                parent_node = nodeset[0]
                 self._serialize_nodes(_dict = values, parent_node=parent_node)
                 # for key, value in list(values.items()):
                 #     if isinstance(value, (float, int, str)):
