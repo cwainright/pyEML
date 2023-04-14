@@ -43,7 +43,7 @@ LOOKUPS = {
 
 
 class Emld():
-    """A container that holds data parsed from an EML-formatted xml file."""
+    """An object that holds data parsed from an EML-formatted xml file."""
 
     def __init__(self, filepath:str, INTERACTIVE:bool=False):
         """Constructor for class Emld
@@ -82,19 +82,12 @@ class Emld():
         Args:
             None
 
-        Raises:
-            Exception: _description_
-
         Returns:
             str: If pretty == True
             lxml.etree.Element: If pretty == False
 
         Examples:
-            myemld.get_title(pretty=True)
-            myemld.set_title(title='my new title')
-            myemld.get_title(pretty=True)
-            myemld.delete_title()
-            myemld.get_title(pretty=True)
+            myemld.get_title()
         """
 
         try:
@@ -122,11 +115,7 @@ class Emld():
             title (str): The title that you want to assign to your dataset.
 
         Examples:
-            myemld.get_title(pretty=True)
             myemld.set_title(title='my new title')
-            myemld.get_title(pretty=True)
-            myemld.delete_title()
-            myemld.get_title(pretty=True)
         """
         try:
             node_xpath = LOOKUPS['title']['node_xpath']
@@ -156,11 +145,7 @@ class Emld():
             None
 
         Examples:
-            myemld.get_title(pretty=True)
-            myemld.set_title(title='my new title')
-            myemld.get_title(pretty=True)
             myemld.delete_title()
-            myemld.get_title(pretty=True)
         """
         node_xpath = LOOKUPS['title']['node_xpath']
         node_target= LOOKUPS['title']['node_target']
@@ -201,6 +186,17 @@ class Emld():
             print('problem get_creator')
 
     def set_creator(self, first:str=None, last:str=None, org:str=None, email:str=None):
+        """Specify the dataset creator's name, organization, and email
+
+        Args:
+            first (str, optional): The dataset creator's first name. Defaults to None.
+            last (str, optional): The dataset creator's last name. Defaults to None.
+            org (str, optional): The dataset creator's organization (e.g., company, government agency). Defaults to None.
+            email (str, optional): The dataset creator's email address. Defaults to None.
+
+        Examples:
+            myemld.set_creator(first='Albus', last='Dumbledore')
+        """
         try:
             node_xpath = LOOKUPS['creator']['node_xpath']
             node_target= LOOKUPS['creator']['node_target']
@@ -230,6 +226,14 @@ class Emld():
             print('error set_creator')
 
     def delete_creator(self):
+        """Delete information about the dataset creator
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_creator()
+        """
         try:
             node_xpath = './dataset/creator'
             node_target= 'creator'
@@ -242,7 +246,16 @@ class Emld():
         except:
             print('error')
     
-    def _serialize(self, node, depth=0):
+    def get_keywords(self):
+        pass
+
+    def set_keywords(self):
+        pass
+
+    def delete_keywords(self):
+        pass
+
+    def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 
         Args:
@@ -251,13 +264,13 @@ class Emld():
 
         Examples:
             # crawl a single node
-            testroot = myemld.root.find('./dataset/creator') # returns one lxml.etree._Element
-            myemld._serialize(testroot)
+            node = myemld.root.find('./dataset/creator') # returns one lxml.etree._Element
+            myemld._serialize(node)
 
             # crawl multiple nodes
             testroot = myemld.root.findall('./dataset') # returns a list of lxml.etree._Element
-            for root in testroot:
-                print(root.tag)
+            for node in testroot:
+                myemld._serialize(node)
         """
         if len(node) == 0:
             print(f'<{node.tag}>')
@@ -279,20 +292,15 @@ class Emld():
         """Deletes the value(s) at a node
 
         Args:
-            node_xpath (str): _description_
-            node_target (str): _description_
-            quiet (bool, optional): _description_. Defaults to False.
+            node_xpath (str): The xpath to the node to be deleted.
+            node_target (str): A short text name for the node to be deleted. Used for f-string generation.
+            quiet (bool): Toggles overwrite warnings and exception messaging.
 
         Raises:
-            error_classes.MissingNodeException: _description_
+            error_classes.MissingNodeException: Raises when a call tries to access a node that does not exist.
 
-        Todo:
-            Bug fix: When deleting any node for the second time (i.e., trying to delete a node that you just deleted),
-                while quiet == False, `MissingNodeException` are chained together so that you get the same message multiple times.
-                E.g.,
-                    myemld.delete_title(quiet=False) # execute the first time, enter 'y' if self.interactive == True and prompted to delete
-                    myemld.delete_title(quiet=False) # execute the second time; should produce two `MissingNodeException`s
-
+        Examples:
+            myemld._delete_node(node_target='title', node_xpath='./dataset/title', quiet=False)
         """
         try:
             node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=True) 
@@ -326,16 +334,6 @@ class Emld():
                     if overwrite.lower() == 'y':
                         for child in node:
                             child.getparent().remove(child)
-                        # if len(node) == 0:
-                            
-                        # elif len(node) == 1:
-                        #     for child in node:
-                        #         child.getparent().remove(child)
-                        # else:
-                        #     for child in node:
-                        #         child.getparent().remove(child)
-                        #         for elm in child:
-                        #             elm.getparent().remove(elm)
                         print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deleted.')
                     else:
                         print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` deletion cancelled.')
@@ -348,16 +346,20 @@ class Emld():
         """Get the value(s) at a node
 
         Args:
-            node_xpath (str): _description_
-            node_target (str): _description_
-            pretty (bool): _description_
-            quiet (bool):
+            node_xpath (str): The xpath to the node to be deleted.
+            node_target (str): A short text name for the node to be deleted. Used for f-string generation.
+            pretty (bool): True prints serialized nodes to console. False returns lxml.etree._Element.
+            quiet (bool): Toggles exception messaging for interactive sessions.
 
         Raises:
-            error_classes.MissingNodeException: _description_
+            error_classes.MissingNodeException: Raises when a call tries to access a node that does not exist.
 
         Returns:
-            _type_: _description_
+            str: when pretty == True; prints serialized nodes to console
+            lxml.etree._Element: when pretty == False
+
+        Examples:
+            myemld._get_node(node_target='title', node_xpath='./dataset/title', pretty=True, quiet=False)
         """
         try:
             node = self.root.findall(node_xpath)
@@ -382,9 +384,19 @@ class Emld():
         """Set the value(s) at a node
 
         Args:
-            values (any): the values to be added to the `node_xpath`
-            node_xpath (str): xpath for the node to which values will be added
-            node_target (str): text name of the node; for f-string generation
+            values (dict): A dictionary of values to serialize into xml tags and text.
+            node_target (str): A short text name for the node to be deleted. Used for f-string generation.
+            node_xpath (str): The xpath to the node to be set.
+            quiet (bool): Toggles exception messaging for interactive sessions.
+
+        Raises:
+            AssertionError: There must be at least one False in node_check.values() or program will duplicate xml tags
+
+        Examples:
+            myemld.delete_title()
+            values_dict={'title': 'my new title'}
+            myemld._set_node(values_dict, node_target='title', node_xpath='./dataset/title', quiet=False)
+            myemld.get_title()
         """
         try:
             # if there's already a node at `node_target`, delete it
@@ -424,25 +436,21 @@ class Emld():
                     node_check[element]=True
 
             assert False in node_check.values(), 'Node deletion failed' # there must be at least one False in node_check or program will duplicate tags
-            # if all upstream nodes exist, make child element(s)
+            
             parent_node = nodeset[0]
-            # target_node = etree.SubElement(parent_node, node_target)
             self._serialize_nodes(_dict = values, target_node=parent_node)
-            # for key, value in list(values.items()):
-            #     if isinstance(value, (float, int, str)):
-            #         new_node = etree.SubElement(parent_node, key)
-            #         new_node.text = values[key]
+
         except AssertionError as a:
             print(a)
     
     def _find_parents(self, node_xpath:str):
-        """Helper method that traverses upstream in an element tree to find each parent node above a `node_target`
+        """Traverse upstream in an element tree to find xpath of each parent node above a `node_target`
 
         Args:
             node_xpath (str): an xpath to a node in an element tree
 
         Returns:
-            list: Each list element is the xpath for one parent-node upstream from the `node_target`
+            list: list of xpaths for each possible parent-node upstream from the `node_target`
 
         Examples:
             node_xpath = './dataset/creator/individualName/givenName'
@@ -455,7 +463,7 @@ class Emld():
         return parent_nodes
 
     def _reverse_serialize(self, xpath_split:list, parent_nodes:list):
-        """Helper method that recursively builds xpaths from a list of node names
+        """Recursively builds xpaths from a list of node names
 
         Args:
             xpath_split (list): a list of node names parsed from an element tree xpath in `_find_parents()`
@@ -496,8 +504,6 @@ class Emld():
             if isinstance(value, dict):
                 self._delete_none(value)
             elif value in ('', None, 'None'):
-                del _dict[key]
-            elif value is None:
                 del _dict[key]
             elif isinstance(value, list):
                 for v_i in value:
