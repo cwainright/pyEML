@@ -1,11 +1,4 @@
-"""A python source module to hold custom error classes for emld.py
-
-Raises:
-    ForceProblem: _description_
-    VerboseProblem: _description_
-    FutureDateProblem: _description_
-"""
-import sys
+"""A python source module to hold custom error classes for emld.py"""
 
 class bcolors:
     '''
@@ -38,92 +31,51 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 class MissingNodeException(Exception):
-    '''
-    # Sub-class of `Error` that handles Missing nodes
+    """Custom error handling for missing xml nodes
 
-    ### `Error`; parent-class
-        - `FutureDateProblem` inherits `ValueError` from `Error` and is used to supply custom error handling for future date exceptions
-    
-    ### Examples
-    ```
-    import datetime
-    # define a function that checks for future dates
-    def myfunc(mydate):
-        # `mydate` is a date string
+    Args:
+        Exception (class): parent class
+
+    Examples:
         try:
-            mydate = datetime.date.fromisoformat(mydate)
-            if mydate > datetime.date.today():
-                raise FutureDateProblem
-        except FutureDateProblem:
-            myerror = FutureDateProblem()
-            myerror.print_problem()
-    # call function and supply a future date as an argument
-    myfunc(mydate='5199-01-01')
-    ```
-    '''
+            if node is None or len(node) == 0:
+                    raise MissingNodeException(node_target)
+        except MissingNodeException as e:
+            print(e.msg)
 
+    """
     def __init__(self, problem_val:str):
-        '''
-        # Instantiate `MissingNodeException`
+        """Produces `self.msg` which is a str that is printed to console via `print_problem()` for interactive sessions
 
-        Produces `self.msg` which is a str that is printed to console via `print_problem()` for interactive sessions
-
-        ### `problem_val`; kwarg; str
-            - Required
-            - Node that failed validation and raised the `MissingNodeException`
-            - Used to produce f-strings in `self.msg`
-        '''
+        Args:
+            problem_val (str): Node that failed validation and raised the `MissingNodeException`. Used to produce f-strings in `self.msg`.
+        """
+        
         self.msg = bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE + 'Process execution failed.\n' + bcolors.ENDC \
             + bcolors.FAIL + f'\n`{problem_val}`' + bcolors.FAIL + ' does not exist. \n'\
             + bcolors.OKBLUE + f'Enter a value for `{problem_val}` with ' + f'`set_{problem_val}()`' + bcolors.ENDC
         
-    def _exit(self):
-        sys.exit(1)
+class InvalidDataStructure(Exception):
+    '''Custom error handling for invalid xml data structures
 
-
-class MissingParent(Exception):
-    '''
-    # Sub-class of `Error` that handles Missing parent nodes
-
-    ### `Error`; parent-class
-        - `MissingParent` inherits `ValueError` from `Error` and is used to supply custom error handling for future date exceptions
+    Args:
+        Exception (class): parent class
     
-    ### Examples
-    ```
-    import datetime
-    # define a function that checks for future dates
-    def myfunc(mydate):
-        # `mydate` is a date string
+    Examples:
         try:
-            mydate = datetime.date.fromisoformat(mydate)
-            if mydate > datetime.date.today():
-                raise MissingParent
-        except MissingParent:
-            myerror = MissingParent()
-            myerror.print_problem()
-    # call function and supply a future date as an argument
-    myfunc(mydate='5199-01-01')
-    ```
+            mydata = [[[['my value']]]] # a deeply nested list will deparse erroneously to xml because there's no Element.tag information
+            raise InvalidDataStructure('mydata')
+        except InvalidDataStructure as e:
+            print(e.msg)
     '''
 
     def __init__(self, problem_val:str):
-        '''
-        # Instantiate `MissingNodeException`
+        '''Produces `self.msg` which is a str that is printed to console via `print_problem()` for interactive sessions
 
-        Produces `self.msg` which is a str that is printed to console via `print_problem()` for interactive sessions
-
-        ### `problem_val`; kwarg; str
-            - Required
-            - Node that failed validation and raised the `MissingNodeException`
-            - Used to produce f-strings in `self.msg`
+        Args:
+            problem_val (str): Node that failed validation and raised the `InvalidDataStructure`. Used to produce f-strings in `self.msg`.
         '''
         self.msg = bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE + 'Process execution failed.\n' + bcolors.ENDC \
             + bcolors.FAIL + f'\n`{problem_val}`' + bcolors.FAIL + ' does not exist. \n'\
             + bcolors.OKBLUE + f'Enter a value for `{problem_val}` with ' + f'`set_{problem_val}()`' + bcolors.ENDC
     
-    def _exit(self):
-        sys.exit(1)
-
-class StopError(AssertionError):
-    def __init__(self):
-        self.__cause__ = None

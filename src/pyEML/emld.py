@@ -12,7 +12,7 @@ License: MIT, license information at end of file
 """
 
 import lxml.etree as etree
-from src.pyEML.error_classes import bcolors, MissingNodeException
+from src.pyEML.error_classes import bcolors, MissingNodeException, InvalidDataStructure
 
 # const `LOOKUPS` holds abstracted EML-schema information that an `Emld` get, set, and delete methods need
 # to build variables. This abstraction lets the engineer maintain EML-node specifics in
@@ -36,6 +36,15 @@ LOOKUPS = {
             },
             'organizationName': None,
             'electronicMailAddress': None
+            }
+        }
+    },
+    'keywords': {
+        'node_xpath': './dataset/keywordSet',
+        'node_target': 'keywords',
+        'values_dict': {
+            'keywordSet': {
+                'keyword': None
             }
         }
     }
@@ -235,8 +244,8 @@ class Emld():
             myemld.delete_creator()
         """
         try:
-            node_xpath = './dataset/creator'
-            node_target= 'creator'
+            node_xpath = LOOKUPS['creator']['node_xpath']
+            node_target= LOOKUPS['creator']['node_target']
             if self.interactive == True:
                 quiet=False
             else:
@@ -244,16 +253,79 @@ class Emld():
             self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
 
         except:
-            print('error')
+            print('error delete_creator()')
     
     def get_keywords(self):
-        pass
+        """Get the dataset's keywords
 
-    def set_keywords(self):
-        pass
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_keywords()
+        """
+        try:
+            node_xpath = LOOKUPS['keywords']['node_xpath']
+            node_target= LOOKUPS['keywords']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+
+        except:
+            print('problem get_keywords()')
+
+    def set_keywords(self, *keywords):
+        try:
+            node_xpath = LOOKUPS['keywords']['node_xpath']
+            node_target= LOOKUPS['keywords']['node_target']
+            values = LOOKUPS['keywords']['values_dict']
+            values['keywordSet']['keyword'] = keywords
+
+            for keyword in keywords:
+                assert keyword not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{keyword}". {node_target} cannot be blank.'
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_keywords()
+
+        except AssertionError as a:
+            print(a)
 
     def delete_keywords(self):
-        pass
+        """Delete information dataset keywords
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_keywords()
+        """
+        try:
+            node_xpath = LOOKUPS['keywords']['node_xpath']
+            node_target= LOOKUPS['keywords']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
+
+        except:
+            print('error delete_keywords()')
 
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
@@ -484,18 +556,26 @@ class Emld():
             _dict (dict): A dictionary of key-value pairs. Keys are mapped to element.tag and values are mapped to element.text unless otherwise specified.
             parent_node (etree._Element): The parent element to which child nodes need to be serially added
         """
-        for key, value in list(_dict.items()):
-            if isinstance(value, (float, int, str)):
-                child_node = etree.SubElement(target_node, key)
-                child_node.text = _dict[key]
-            elif isinstance(value, dict):
-                child_node = etree.SubElement(target_node, key)
-                self._serialize_nodes(value, child_node)
-            elif isinstance(value, list):
-                for v_i in value:
+        try:
+            for key, value in list(_dict.items()):
+                if isinstance(value, (float, int, str)):
                     child_node = etree.SubElement(target_node, key)
-                    if isinstance(v_i, dict):
-                        self._serialize_nodes(v_i, child_node)
+                    child_node.text = _dict[key]
+                elif isinstance(value, dict):
+                    child_node = etree.SubElement(target_node, key)
+                    self._serialize_nodes(value, child_node)
+                elif isinstance(value, (list, tuple)):
+                    for v_i in value:
+                        child_node = etree.SubElement(target_node, key)
+                        if isinstance(v_i, (float, int, str)):
+                            child_node.text = v_i
+                        elif isinstance(v_i, dict):
+                            self._serialize_nodes(v_i, child_node)
+                        else:
+                            raise InvalidDataStructure(target_node) # a non-serializable data structure (e.g., a list of lists of lists of lists...)
+        
+        except InvalidDataStructure as e:
+            print(e.msg)
     
     def _delete_none(self, _dict):
         """Delete None values recursively from all of the dictionaries"""
