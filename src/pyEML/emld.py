@@ -29,12 +29,14 @@ LOOKUPS = {
         'node_xpath': './dataset/creator',
         'node_target': 'creator',
         'values_dict': {
-            'individualName': {
+            'creator': {
+                'individualName': {
                 'givenName': None,
                 'surName': None
             },
             'organizationName': None,
             'electronicMailAddress': None
+            }
         }
     }
 }
@@ -74,11 +76,11 @@ class Emld():
         except:
             print('exception')
 
-    def get_title(self, pretty:bool=False):
+    def get_title(self):
         """Get the dataset's title 
 
         Args:
-            pretty (bool, optional): True returns pretty-printed version. Defaults to False.
+            None
 
         Raises:
             Exception: _description_
@@ -96,11 +98,20 @@ class Emld():
         """
 
         try:
+
             node_xpath = LOOKUPS['title']['node_xpath']
             node_target= LOOKUPS['title']['node_target']
-            node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=True)
-            if node: # only returns an object if pretty == False
-                return node
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
         except:
             print('problem get_title')
 
@@ -133,7 +144,7 @@ class Emld():
             self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
-                self.get_title(pretty=True)
+                self.get_title()
         
         except AssertionError as a:
             print(a)
@@ -142,8 +153,8 @@ class Emld():
         """Delete value(s) from dataset title node(s)
         
         Args:
-        quiet (bool): Override self.interactive to turn off messages for this method.
-        
+            None
+
         Examples:
             myemld.get_title(pretty=True)
             myemld.set_title(title='my new title')
@@ -159,21 +170,33 @@ class Emld():
             quiet=True
         self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
             
-    def get_creator(self, pretty:bool=False):
+    def get_creator(self):
         """Get information about the dataset's creator
 
         Args:
-            pretty (bool, optional): True - Pretty-print tree to console. False - return element tree. Defaults to False.
+            None
+
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
 
         Examples:
             myemld.get_creator()
         """
         try:
-            node_xpath = './dataset/creator'
-            node_target= 'creator'
-            node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty)
-            if node: # only returns an object if pretty == False
-                return node
+            node_xpath = LOOKUPS['creator']['node_xpath']
+            node_target= LOOKUPS['creator']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+
         except:
             print('problem get_creator')
 
@@ -184,13 +207,13 @@ class Emld():
             dirty_vals = LOOKUPS['creator']['values_dict']
 
             if first not in (None, ''):
-                dirty_vals['individualName']['givenName'] = first
+                dirty_vals['creator']['individualName']['givenName'] = first
             if last not in (None, ''):
-                dirty_vals['individualName']['surName'] = last
+                dirty_vals['creator']['individualName']['surName'] = last
             if org not in (None, ''):
-                dirty_vals['organizationName'] = org
+                dirty_vals['creator']['organizationName'] = org
             if email not in (None, ''):
-                dirty_vals['electronicMailAddress'] = org
+                dirty_vals['creator']['electronicMailAddress'] = email
 
             if self.interactive == True:
                 quiet=False
@@ -201,7 +224,7 @@ class Emld():
             self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
-                self.get_creator(pretty=True)
+                self.get_creator()
             
         except:
             print('error set_creator')
@@ -251,20 +274,6 @@ class Emld():
                 else:
                     self._serialize(elm, depth+1)
             print(f'{spaces}</{node.tag}>')
-
-        # testroot = myemld.root.find('./dataset/creator')
-        # def serialize(node, depth=0):
-        #     indents = depth * '    '
-        #     print(f'{indents}<{node.tag}>')
-        #     for elm in node:
-        #         if len(elm) == 0:
-        #             print(f'{indents}    <{elm.tag}>')
-        #             print(f'{indents}            {elm.text}')
-        #             print(f'{indents}    </{elm.tag}>')
-        #         else:
-        #             serialize(elm, depth+1)
-        #     print(f'{indents}</{node.tag}>')
-        # serialize(testroot)
 
     def _delete_node(self, node_xpath:str, node_target:str, quiet:bool):
         """Deletes the value(s) at a node
@@ -335,7 +344,7 @@ class Emld():
             if quiet == False:
                 print(e.msg)
             
-    def _get_node(self, node_xpath:str, node_target:str, pretty:bool, quiet:bool=True):
+    def _get_node(self, node_xpath:str, node_target:str, pretty:bool, quiet:bool):
         """Get the value(s) at a node
 
         Args:
@@ -405,22 +414,26 @@ class Emld():
 
             
             # if there's not a node at `node_target`, need to find crawl xpath to add missing nodes
-            node_list = self._find_parents(node_xpath=node_xpath)[1:]
-            node_check = []
+            node_list = self._find_parents(node_xpath=node_xpath)
+            node_check = {}
             for element in node_list:
                 nodeset = self.root.findall(element)
-                for node in nodeset:
-                    node_check.append((etree.iselement(node))) # check that every node upstream of `node_xpath` exists
-            if all(node_check): # if all upstream nodes exist, make child element(s)
-                parent_node = nodeset[0]
-                target_node = etree.SubElement(parent_node, node_target)
-                self._serialize_nodes(_dict = values, target_node=target_node)
-                # for key, value in list(values.items()):
-                #     if isinstance(value, (float, int, str)):
-                #         new_node = etree.SubElement(parent_node, key)
-                #         new_node.text = values[key]
-        except:
-            print('error')
+                if len(nodeset) == 0:
+                    node_check[element]=False
+                else:
+                    node_check[element]=True
+
+            assert False in node_check.values(), 'Node deletion failed' # there must be at least one False in node_check or program will duplicate tags
+            # if all upstream nodes exist, make child element(s)
+            parent_node = nodeset[0]
+            # target_node = etree.SubElement(parent_node, node_target)
+            self._serialize_nodes(_dict = values, target_node=parent_node)
+            # for key, value in list(values.items()):
+            #     if isinstance(value, (float, int, str)):
+            #         new_node = etree.SubElement(parent_node, key)
+            #         new_node.text = values[key]
+        except AssertionError as a:
+            print(a)
     
     def _find_parents(self, node_xpath:str):
         """Helper method that traverses upstream in an element tree to find each parent node above a `node_target`
