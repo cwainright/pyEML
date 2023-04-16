@@ -73,6 +73,20 @@ LOOKUPS = {
         'values_dict': {
             'pubDate': None
         }
+    },
+    'begin_end_date': {
+        'node_xpath': './dataset/coverage/temporalCoverage/rangeOfDates',
+        'node_target': 'begin and/or end date',
+        'values_dict': {
+            'rangeOfDates': {
+                'beginDate': {
+                    'calendarDate': None
+                },
+                'endDate': {
+                    'calendarDate': None
+                }
+            }
+        }
     }
 }
 
@@ -126,7 +140,6 @@ class Emld():
         """
 
         try:
-
             node_xpath = LOOKUPS['title']['node_xpath']
             node_target= LOOKUPS['title']['node_target']
             if self.interactive == True:
@@ -261,7 +274,7 @@ class Emld():
                 self.get_creator()
             
         except:
-            print('error set_creator')
+            print('error set_creator()')
 
     def delete_creator(self):
         """Delete information about the dataset creator
@@ -561,7 +574,7 @@ class Emld():
             node_target= LOOKUPS['pub_date']['node_target']
             values = LOOKUPS['pub_date']['values_dict']
             assert pub_date not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{pub_date}". `{node_target}` cannot be blank.'
-
+            
             values['pubDate'] = pub_date
             if self.interactive == True:
                 quiet=False
@@ -648,6 +661,86 @@ class Emld():
             self.delete_creator()
         except:
             print('error delete_author()')
+
+    def get_temporal_coverage(self):
+        """Get the dataset's temporal coverage
+
+        EML temporal coverage is the date range (i.e., min and max date) of the dataset.
+
+        Args:
+            None
+
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_temporal_coverage()
+        """
+        try:
+            node_xpath = LOOKUPS['begin_end_date']['node_xpath']
+            node_target= LOOKUPS['begin_end_date']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_temporal_coverage()')
+
+    def set_temporal_coverage(self, begin_date:str=None, end_date:str=None):
+        try:
+            assert begin_date not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{begin_date}". `{node_target}` cannot be blank.'
+            assert isinstance(begin_date, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(begin_date)}: {begin_date}.\Dates must be of type str.\nE.g., myemld.set_temporal_coverage(begin_date="2021")'
+            assert end_date not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{end_date}". `{node_target}` cannot be blank.'
+            assert isinstance(end_date, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(end_date)}: {end_date}.\Dates must be of type str.\nE.g., myemld.set_temporal_coverage(end_date="2021")'
+
+            node_xpath = LOOKUPS['begin_end_date']['node_xpath']
+            node_target= LOOKUPS['begin_end_date']['node_target']
+            dirty_vals = LOOKUPS['begin_end_date']['values_dict']
+            dirty_vals['rangeOfDates']['beginDate']['calendarDate'] = begin_date
+            dirty_vals['rangeOfDates']['endDate']['calendarDate'] = end_date
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            cleanvals = self._delete_none(dirty_vals)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_temporal_coverage()
+            
+        except:
+            print('error set_temporal_coverage()')
+
+    def delete_temporal_coverage(self):
+        """Delete dataset temporal coverage
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_temporal_coverage()
+        """
+        try:
+            node_xpath = LOOKUPS['begin_end_date']['node_xpath']
+            node_target= LOOKUPS['begin_end_date']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
+
+        except:
+            print('error delete_temporal_coverage()')
 
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
@@ -923,9 +1016,12 @@ class Emld():
             elif value in ('', None, 'None'):
                 del _dict[key]
             elif isinstance(value, list):
-                for v_i in value:
-                    if isinstance(v_i, dict):
-                        self._delete_none(v_i)
+                if len(value) == 0:
+                    del _dict[key]
+                else:
+                    for v_i in value:
+                        if isinstance(v_i, dict):
+                            self._delete_none(v_i)
         
         return _dict
     

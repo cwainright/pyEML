@@ -9,6 +9,28 @@ filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/dat
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
 
+myemld.get_temporal_coverage()
+myemld.delete_temporal_coverage()
+myemld.set_temporal_coverage(begin_date='2020', end_date='2022')
+
+
+
+
+
+
+
+myemld.get_author()
+myemld.delete_author()
+myemld.set_author(first='newfirst')
+myemld.get_pub_date()
+myemld.set_pub_date(pub_date='2021')
+myemld.delete_pub_date()
+
+
+
+
+
+
 myemld.set_publisher(org='testorg')
 myemld.get_publisher()
 myemld.delete_publisher()
