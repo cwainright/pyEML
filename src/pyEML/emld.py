@@ -283,14 +283,23 @@ class Emld():
             print('problem get_keywords()')
 
     def set_keywords(self, *keywords):
+        """Set the dataset's keywords
+
+        Args:
+            *keywords (str, arbitrary argument): `set_keywords()` accepts any number of comma-separated arguments
+
+        Examples:
+            myemld.delete_keywords()
+        """
         try:
+            for keyword in keywords:
+                assert keyword not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{keyword}". {node_target} cannot be blank.'
+                assert isinstance(keyword, (int, float, str)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(keyword)}: {keyword}.\nKeywords must be comma-separated values of type str, int, or float.\nE.g., myemld.set_keywords("firstkeyword", "secondkeyword")'
+
             node_xpath = LOOKUPS['keywords']['node_xpath']
             node_target= LOOKUPS['keywords']['node_target']
             values = LOOKUPS['keywords']['values_dict']
             values['keywordSet']['keyword'] = keywords
-
-            for keyword in keywords:
-                assert keyword not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{keyword}". {node_target} cannot be blank.'
 
             if self.interactive == True:
                 quiet=False
