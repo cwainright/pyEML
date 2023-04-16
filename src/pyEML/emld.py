@@ -596,6 +596,59 @@ class Emld():
         except:
             print('error delete_pub_date()')
 
+    def get_author(self):
+        """Get information about the dataset's author
+
+        Note: EML 'author' and 'creator' are the same thing.
+
+        Args:
+            None
+
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_author()
+        """
+        try:
+            self.get_creator()
+        except:
+            print('error get_author()')
+
+    def set_author(self, first:str=None, last:str=None, org:str=None, email:str=None):
+        """Specify the dataset author's name, organization, and email
+
+        Note: EML 'author' and 'creator' are the same thing.
+
+        Args:
+            first (str, optional): The dataset creator's first name. Defaults to None.
+            last (str, optional): The dataset creator's last name. Defaults to None.
+            org (str, optional): The dataset creator's organization (e.g., company, government agency). Defaults to None.
+            email (str, optional): The dataset creator's email address. Defaults to None.
+
+        Examples:
+            myemld.set_author(first='Albus', last='Fumblesnore')
+        """
+        try:
+            self.set_creator(first=first, last=last, org=org, email=email)
+        except:
+            print('error set_author()')
+
+    def delete_author(self):
+        """Delete information about the dataset creator
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_author()
+        """
+        try:
+            self.delete_creator()
+        except:
+            print('error delete_author()')
+
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 
