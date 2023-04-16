@@ -13,7 +13,8 @@ myemld = Emld(filepath=filename, INTERACTIVE=True)
 
 myemld.delete_keywords()
 myemld.get_keywords()
-
+myemld.set_keywords('firstnewkeyword', 'secondnewkeyword')
+myemld.set_keywords('morekeywords', 'again')
 myemld.get_keywords()
 
 

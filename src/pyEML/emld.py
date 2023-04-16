@@ -476,25 +476,28 @@ class Emld():
                 self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)
             else:
                 node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=quiet)
-                if len(node) == 1:
-                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
-                if len(node) > 1:
-                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
-                counter = 1
-                for elm in node:
-                    if len(node) <=1:
-                        self._serialize(elm)
-                    if len(node) >1:
-                        print(f'{counter}:')
-                        self._serialize(elm)
-                        counter += 1
-
-                overwrite = input(f'{bcolors.BOLD}Do you want to delete these node(s)?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
-                print(f'User input: {overwrite}')
-                if overwrite.lower() == 'y':
-                    self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
+                if node is None or len(node) == 0:
+                    pass
                 else:
-                    print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` set cancelled.')
+                    if len(node) == 1:
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
+                    elif len(node) > 1:
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
+                    counter = 1
+                    for elm in node:
+                        if len(node) <=1:
+                            self._serialize(elm)
+                        if len(node) >1:
+                            print(f'{counter}:')
+                            self._serialize(elm)
+                            counter += 1
+
+                    overwrite = input(f'{bcolors.BOLD}Do you want to delete these node(s)?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
+                    print(f'User input: {overwrite}')
+                    if overwrite.lower() == 'y':
+                        self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=True)
+                    else:
+                        print(f'`{bcolors.BOLD}{node_target}{bcolors.ENDC}` set cancelled.')
 
             
             # if there's not a node at `node_target`, need to find crawl xpath to add missing nodes
