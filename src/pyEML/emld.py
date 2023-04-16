@@ -66,6 +66,13 @@ LOOKUPS = {
                 }
             }
         }
+    },
+    'pub_date': {
+        'node_xpath': './dataset/pubDate',
+        'node_target': 'publication date',
+        'values_dict': {
+            'pubDate': None
+        }
     }
 }
 
@@ -134,7 +141,7 @@ class Emld():
                     return node
             
         except:
-            print('problem get_title')
+            print('problem get_title()')
 
     def set_title(self, title:str):
         """Set the dataset's title
@@ -149,8 +156,8 @@ class Emld():
             node_xpath = LOOKUPS['title']['node_xpath']
             node_target= LOOKUPS['title']['node_target']
             values = LOOKUPS['title']['values_dict']
-            assert title not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". `title` cannot be blank.'
-            assert len(title) >= 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". {bcolors.BOLD}`title`{bcolors.ENDC} must be at least three characters.'
+            assert title not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". `{node_target}` cannot be blank.'
+            assert len(title) >= 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". {bcolors.BOLD}`{node_target}`{bcolors.ENDC} must be at least three characters.'
 
             values['title'] = title
             if self.interactive == True:
@@ -175,13 +182,16 @@ class Emld():
         Examples:
             myemld.delete_title()
         """
-        node_xpath = LOOKUPS['title']['node_xpath']
-        node_target= LOOKUPS['title']['node_target']
-        if self.interactive == True:
-            quiet=False
-        else:
-            quiet=True
-        self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
+        try:
+            node_xpath = LOOKUPS['title']['node_xpath']
+            node_target= LOOKUPS['title']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_title()') 
             
     def get_creator(self):
         """Get information about the dataset's creator
@@ -358,12 +368,15 @@ class Emld():
     def get_publisher(self):
         """Get the dataset's publisher
 
+        Args:
+            None
+
         Returns:
             str: If pretty == True
             lxml.etree.Element: If pretty == False
 
         Examples:
-            myemld.get_keywords()
+            myemld.get_publisher()
         """
         try:
             node_xpath = LOOKUPS['publisher']['node_xpath']
@@ -393,6 +406,32 @@ class Emld():
         email:str=None,
         ror_id=None # allow user to enter str or int and type-cast later
         ):
+        """Set the dataset publisher
+
+        Args:
+            org (str, optional): The publisher's organization; usually a company or government agency. Defaults to None.
+            street_address (str, optional): The publisher's street address. Defaults to None.
+            city (str, optional): The city of the publisher's street address. Defaults to None.
+            state (str, optional): The state or province of the publisher's street address. Defaults to None.
+            zip (str or int, optional): The zip or postal code of the publisher's street address. Defaults to None.
+            url (str, optional): The publisher's website. Defaults to None.
+            email (str, optional): The publisher's email address. Defaults to None.
+            ror_id (str or int, optional): The publisher's Research Organization Registry (ROR) id; see https://ror.org/. Defaults to None.
+
+        Examples:
+            myemld.set_publisher(org='My organization')
+            myemld.set_publisher(
+                org='My organization',
+                street_address='105 NE 5th Ave, #14',
+                city='Chicago',
+                state='IL',
+                zip=60606,
+                country='USA',
+                url='www.nps.gov',
+                email='myname@nps.gov',
+                ror_id=11234
+            )
+        """
         try:
             if org is not None:
                 assert org not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{org}". {node_target} cannot accept blank values.'
@@ -476,7 +515,87 @@ class Emld():
         except:
             print('error delete_publisher()')
     
-    
+    def get_pub_date(self):
+        """Get the dataset's publication date 
+
+        Args:
+            None
+
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_pub_date()
+        """
+        try:
+            node_xpath = LOOKUPS['pub_date']['node_xpath']
+            node_target= LOOKUPS['pub_date']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_pub_date()')
+
+    def set_pub_date(self, pub_date:str):
+        """Set the dataset's publication date 
+
+        Args:
+            pub_date (str): The dataset's publication date. No specific date format is required)
+
+        Examples:
+            myemld.set_pub_date(pub_date:'2021')
+            myemld.set_pub_date(pub_date:'2022-01-01')
+            myemld.set_pub_date(pub_date:'Jan 2022')
+        """
+        try:
+            node_xpath = LOOKUPS['pub_date']['node_xpath']
+            node_target= LOOKUPS['pub_date']['node_target']
+            values = LOOKUPS['pub_date']['values_dict']
+            assert pub_date not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{pub_date}". `{node_target}` cannot be blank.'
+
+            values['pubDate'] = pub_date
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_pub_date()
+        
+        except AssertionError as a:
+            print(a)
+
+    def delete_pub_date(self):
+        """Delete the dataset's publication date 
+        
+        Args:
+            None
+
+        Examples:
+            myemld.delete_pub_date()
+        """
+        try:
+            node_xpath = LOOKUPS['pub_date']['node_xpath']
+            node_target= LOOKUPS['pub_date']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)
+        except:
+            print('error delete_pub_date()')
+
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 
