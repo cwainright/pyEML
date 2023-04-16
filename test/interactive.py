@@ -9,11 +9,25 @@ filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/dat
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
 
+myemld.set_publisher(org='testorg')
+myemld.get_publisher()
+myemld.delete_publisher()
+
+zip = '12312'
+type(zip) in (str, int)
+
+
+testval = {}
+len(testval)
+
+
+
+
 
 
 myemld.delete_keywords()
 myemld.get_keywords()
-myemld.set_keywords('firstnewkeyword', 'secondnewkeyword')
+myemld.set_keywords({'firstkeyword', 'secondkeyword'})
 myemld.set_keywords('morekeywords', 'again')
 myemld.get_keywords()
 

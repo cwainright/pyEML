@@ -47,6 +47,25 @@ LOOKUPS = {
                 'keyword': None
             }
         }
+    },
+    'publisher': {
+        'node_xpath': './dataset/publisher',
+        'node_target': 'publisher',
+        'values_dict': {
+            'publisher': {
+                'address': {
+                    'city': None,
+                    'administrativeArea': None, #i.e., state or province
+                    'postalCode': None,
+                    'country': None
+                },
+                'onlineUrl': None,
+                'userId': { # Research Organization Registry (ROR) id https://ror.org/
+                    'directory': None,
+                    'userId': None
+                }
+            }
+        }
     }
 }
 
@@ -204,7 +223,7 @@ class Emld():
             email (str, optional): The dataset creator's email address. Defaults to None.
 
         Examples:
-            myemld.set_creator(first='Albus', last='Dumbledore')
+            myemld.set_creator(first='Albus', last='Fumblesnore')
         """
         try:
             node_xpath = LOOKUPS['creator']['node_xpath']
@@ -316,7 +335,7 @@ class Emld():
             print(a)
 
     def delete_keywords(self):
-        """Delete information dataset keywords
+        """Delete dataset keywords
 
         Args:
             None
@@ -336,6 +355,128 @@ class Emld():
         except:
             print('error delete_keywords()')
 
+    def get_publisher(self):
+        """Get the dataset's publisher
+
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_keywords()
+        """
+        try:
+            node_xpath = LOOKUPS['publisher']['node_xpath']
+            node_target= LOOKUPS['publisher']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+
+        except:
+            print('problem get_publisher()')
+
+    def set_publisher(self,
+        org:str=None,
+        street_address:str=None,
+        city:str=None,
+        state:str=None,
+        zip=None, # allow user to enter str or int and type-cast later
+        country:str=None,
+        url:str=None,
+        email:str=None,
+        ror_id=None # allow user to enter str or int and type-cast later
+        ):
+        try:
+            if org is not None:
+                assert org not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{org}". {node_target} cannot accept blank values.'
+                assert isinstance(org, (int, float, str)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(org)}: {org}.\Organization must be of type str, int, or float.\nE.g., myemld.set_publisher(org="yourorg")'
+            if street_address is not None:
+                assert street_address not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{street_address}". {node_target} cannot accept blank values.'
+                assert isinstance(street_address, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(street_address)}: {street_address}.\Addresses must be of type str.\nE.g., myemld.set_publisher(street_address="101 5th Ave., #145")'
+            if city is not None:
+                assert city not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{city}". {node_target} cannot accept blank values.'
+                assert isinstance(city, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(city)}: {city}.\City must be of type str.\nE.g., myemld.set_publisher(city="Memphis")'
+            if state is not None:
+                assert state not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{state}". {node_target} cannot accept blank values.'
+                assert isinstance(state, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(state)}: {state}.\State must be of type str.\nE.g., myemld.set_publisher(state="OR")'
+            if zip is not None:
+                assert zip not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{zip}". {node_target} cannot accept blank values.'
+                assert isinstance(zip, (str, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(zip)}: {zip}.\Zip code must be of type str.\nE.g., myemld.set_publisher(zip=12312) or myemld.set_publisher(zip="12312")'
+                zip = str(zip) # type-cast if zip passes assertions
+            if country is not None:
+                assert country not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{country}". {node_target} cannot accept blank values.'
+                assert isinstance(country, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(country)}: {country}.\Country must be of type str.\nE.g., myemld.set_publisher(country="USA")'
+            if url is not None:
+                assert url not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{url}". {node_target} cannot accept blank values.'
+                assert isinstance(url, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(url)}: {url}.\nURL must be of type str.\nE.g., myemld.set_publisher(url="www.nps.gov")'
+            if email is not None:
+                assert email not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{email}". {node_target} cannot accept blank values.'
+                assert isinstance(email, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(email)}: {email}.\Email must be of type str.\nE.g., myemld.set_publisher(email="myname@nps.gov")'
+            if ror_id is not None:
+                assert ror_id not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{ror_id}". {node_target} cannot accept blank values.'
+                assert isinstance(ror_id, (int, str)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(ror_id)}: {ror_id}.\Research Organization Registry (ROR) id must be type str or int.\nSee https://ror.org/ for more information.\nE.g., myemld.set_publisher(ror_id="abc123")'
+                ror_id = str(ror_id) # type-cast if ror_id passes assertions
+
+            node_xpath = LOOKUPS['publisher']['node_xpath']
+            node_target= LOOKUPS['publisher']['node_target']
+            dirty_vals = LOOKUPS['publisher']['values_dict']
+
+            dirty_vals['publisher']['organizationName'] = org
+            dirty_vals['publisher']['address']['deliveryPoint'] = street_address
+            dirty_vals['publisher']['address']['city'] = city
+            dirty_vals['publisher']['address']['administrativeArea'] = state
+            dirty_vals['publisher']['address']['postalCode'] = zip
+            dirty_vals['publisher']['address']['country'] = country
+            dirty_vals['publisher']['onlineUrl'] = url
+            dirty_vals['publisher']['electronicMailAddress'] = email
+            dirty_vals['publisher']['electronicMailAddress'] = email
+            if ror_id:
+                dirty_vals['publisher']['directory'] = 'https://ror.org/'
+                dirty_vals['publisher']['userId'] = 'https://ror.org/' + ror_id
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            cleanvals = self._delete_none(dirty_vals)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_publisher()
+            
+        except:
+            print('error set_publisher')
+
+    def delete_publisher(self):
+        """Delete dataset publisher
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_publisher()
+        """
+        try:
+            node_xpath = LOOKUPS['publisher']['node_xpath']
+            node_target= LOOKUPS['publisher']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
+
+        except:
+            print('error delete_publisher()')
+    
+    
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 
@@ -484,7 +625,7 @@ class Emld():
             if quiet == True:
                 self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)
             else:
-                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=quiet)
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=True)
                 if node is None or len(node) == 0:
                     pass
                 else:
@@ -594,14 +735,26 @@ class Emld():
         # adapted from https://stackoverflow.com/questions/33797126/proper-way-to-remove-keys-in-dictionary-with-none-values-in-python
         for key, value in list(_dict.items()):
             if isinstance(value, dict):
-                self._delete_none(value)
+                if len(value) == 0:
+                    del _dict[key]
+                if len(value) > 0:
+                    none_check = []
+                    for v in value.values():
+                        if v is None:
+                            none_check.append(True)
+                        else:
+                            none_check.append(False)
+                    if all(none_check):
+                        del _dict[key]
+                    else:
+                        self._delete_none(value)
             elif value in ('', None, 'None'):
                 del _dict[key]
             elif isinstance(value, list):
                 for v_i in value:
                     if isinstance(v_i, dict):
                         self._delete_none(v_i)
-
+        
         return _dict
     
     def write_eml(self, filename:str):
