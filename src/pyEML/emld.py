@@ -74,16 +74,18 @@ LOOKUPS = {
             'pubDate': None
         }
     },
-    'begin_end_date': {
-        'node_xpath': './dataset/coverage/temporalCoverage/rangeOfDates',
+    'temporal_coverage': {
+        'node_xpath': './dataset/coverage/temporalCoverage',
         'node_target': 'begin and/or end date',
         'values_dict': {
-            'rangeOfDates': {
-                'beginDate': {
-                    'calendarDate': None
-                },
-                'endDate': {
-                    'calendarDate': None
+            'temporalCoverage': {
+                'rangeOfDates': {
+                    'beginDate': {
+                        'calendarDate': None
+                    },
+                    'endDate': {
+                        'calendarDate': None
+                    }
                 }
             }
         }
@@ -701,11 +703,11 @@ class Emld():
             assert end_date not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{end_date}". `{node_target}` cannot be blank.'
             assert isinstance(end_date, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(end_date)}: {end_date}.\Dates must be of type str.\nE.g., myemld.set_temporal_coverage(end_date="2021")'
 
-            node_xpath = LOOKUPS['begin_end_date']['node_xpath']
-            node_target= LOOKUPS['begin_end_date']['node_target']
-            dirty_vals = LOOKUPS['begin_end_date']['values_dict']
-            dirty_vals['rangeOfDates']['beginDate']['calendarDate'] = begin_date
-            dirty_vals['rangeOfDates']['endDate']['calendarDate'] = end_date
+            node_xpath = LOOKUPS['temporal_coverage']['node_xpath']
+            node_target= LOOKUPS['temporal_coverage']['node_target']
+            dirty_vals = LOOKUPS['temporal_coverage']['values_dict']
+            dirty_vals['temporalCoverage']['rangeOfDates']['beginDate']['calendarDate'] = begin_date
+            dirty_vals['temporalCoverage']['rangeOfDates']['endDate']['calendarDate'] = end_date
 
             if self.interactive == True:
                 quiet=False
@@ -927,11 +929,31 @@ class Emld():
 
             assert False in node_check.values(), 'Node deletion failed' # there must be at least one False in node_check or program will duplicate tags
             
-            parent_node = nodeset[0]
+            # parent_node = nodeset[0]
+            parent_node_xpath = self._parent_node_finder(node_check)
+            parent_node = self.root.findall(parent_node_xpath)
+            assert len(parent_node) == 1, 'Returned multiple parent nodes. Ambiguous data structure.'
+            parent_node = self.root.findall(parent_node_xpath)[0]
             self._serialize_nodes(_dict = values, target_node=parent_node)
 
         except AssertionError as a:
             print(a)
+    
+    def _parent_node_finder(self, _dict:dict):
+        """Find the furthest downstream node that exists in an element tree
+
+        Args:
+            _dict (dict): A dictionary where keys are xpaths of nodes in an element tree and values are True or False.
+                True means there is an element at that xpath. False means there is no element at that xpath.
+        """
+        mylist = list(_dict.values())
+        minidices = []
+        for i in range(0, len(mylist)):
+            if mylist[i] == True:
+                minidices.append(i)
+        myval = min(minidices)
+        finalval = list(_dict.keys())[myval]
+        return finalval
     
     def _find_parents(self, node_xpath:str):
         """Traverse upstream in an element tree to find xpath of each parent node above a `node_target`

@@ -19,6 +19,69 @@ myemld.set_temporal_coverage(begin_date='2020', end_date='2022')
 
 
 
+mytestdict1 = {
+    'node4': False,
+    'node3': True,
+    'node2': True,
+    'node1': True
+}
+
+mytestdict2 = {
+    'node7': False,
+    'node6': False,
+    'node5': False,
+    'node4': True,
+    'node3': True,
+    'node2': True,
+    'node1': True
+}
+
+def myfunc(_dict:dict):
+    mylist = list(_dict.values())
+    minidices = []
+    for i in range(0, len(mylist)):
+        if mylist[i] == True:
+            minidices.append(i)
+    myval = min(minidices)
+    finalval = list(_dict.keys())[myval]
+    return finalval
+
+myfunc(mytestdict1)
+myfunc(mytestdict2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 myemld.get_author()
 myemld.delete_author()
 myemld.set_author(first='newfirst')
