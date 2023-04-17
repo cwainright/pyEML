@@ -3,50 +3,21 @@ from importlib import reload
 reload(src.pyEML.emld)
 from src.pyEML.emld import Emld
 
-
-
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+myemld.get_cui()
+
+
+myemld.describe_citation()
+myemld.describe_cui()
+myemld.describe_int_rights()
+
 
 myemld.get_temporal_coverage()
 myemld.delete_temporal_coverage()
 myemld.set_temporal_coverage(begin_date='2020', end_date='2022')
 
-
-
-
-
-
-mytestdict1 = {
-    'node4': False,
-    'node3': True,
-    'node2': True,
-    'node1': True
-}
-
-mytestdict2 = {
-    'node7': False,
-    'node6': False,
-    'node5': False,
-    'node4': True,
-    'node3': True,
-    'node2': True,
-    'node1': True
-}
-
-def myfunc(_dict:dict):
-    mylist = list(_dict.values())
-    minidices = []
-    for i in range(0, len(mylist)):
-        if mylist[i] == True:
-            minidices.append(i)
-    myval = min(minidices)
-    finalval = list(_dict.keys())[myval]
-    return finalval
-
-myfunc(mytestdict1)
-myfunc(mytestdict2)
 
 
 

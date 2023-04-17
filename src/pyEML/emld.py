@@ -13,91 +13,7 @@ License: MIT, license information at end of file
 
 import lxml.etree as etree
 from src.pyEML.error_classes import bcolors, MissingNodeException, InvalidDataStructure
-
-# const `LOOKUPS` holds abstracted EML-schema information that an `Emld` get, set, and delete methods need
-# to build variables. This abstraction lets the engineer maintain EML-node specifics in
-# one place, `LOOKUPS`, instead of in individual methods.
-LOOKUPS = {
-    'title': {
-        'node_xpath': './dataset/title',
-        'node_target': 'title',
-        'parent': './dataset',
-        'values_dict': {
-            'title': None
-            }
-    },
-    'creator': {
-        'node_xpath': './dataset/creator',
-        'node_target': 'creator',
-        'parent': './dataset',
-        'values_dict': {
-            'creator': {
-                'individualName': {
-                'givenName': None,
-                'surName': None
-            },
-            'organizationName': None,
-            'electronicMailAddress': None
-            }
-        }
-    },
-    'keywords': {
-        'node_xpath': './dataset/keywordSet',
-        'node_target': 'keywords',
-        'parent': './dataset',
-        'values_dict': {
-            'keywordSet': {
-                'keyword': None
-            }
-        }
-    },
-    'publisher': {
-        'node_xpath': './dataset/publisher',
-        'node_target': 'publisher',
-        'parent': './dataset',
-        'values_dict': {
-            'publisher': {
-                'address': {
-                    'city': None,
-                    'administrativeArea': None, #i.e., state or province
-                    'postalCode': None,
-                    'country': None
-                },
-                'onlineUrl': None,
-                'userId': { # Research Organization Registry (ROR) id https://ror.org/
-                    'directory': None,
-                    'userId': None
-                }
-            }
-        }
-    },
-    'pub_date': {
-        'node_xpath': './dataset/pubDate',
-        'node_target': 'publication date',
-        'parent': './dataset',
-        'values_dict': {
-            'pubDate': None
-        }
-    },
-    'temporal_coverage': {
-        'node_xpath': './dataset/coverage/temporalCoverage',
-        'node_target': 'temporal coverage',
-        'parent': './dataset/coverage',
-        'values_dict': {
-            'temporalCoverage': {
-                'rangeOfDates': {
-                    'beginDate': {
-                        'calendarDate': None
-                    },
-                    'endDate': {
-                        'calendarDate': None
-                    }
-                }
-            }
-        }
-    }
-}
-
+from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, INT_RIGHTS_CHOICES, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES
 
 class Emld():
     """An object that holds data parsed from an EML-formatted xml file."""
@@ -757,6 +673,143 @@ class Emld():
         except:
             print('error delete_temporal_coverage()')
 
+    def get_cui(self):
+        """Get the dataset's controlled unclassified information (CUI) status 
+
+        Args:
+            None
+
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_cui()
+        """
+        try:
+            node_xpath = LOOKUPS['cui']['node_xpath']
+            node_target= LOOKUPS['cui']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_cui()')
+
+    def set_cui(self, cui:str=CUI_CHOICES):
+        """Set the dataset's controlled unclassified information (CUI) status
+        
+        Args:
+            cui (str): The value you want to assign as the dataset's CUI status. Valid `cui` values come from `src.pyEML.constants.CUI_CHOICES`.
+
+        Examples:
+            myemld.set_cui(cui='my new title')
+        """
+        try:
+            node_xpath = LOOKUPS['cui']['node_xpath']
+            node_target= LOOKUPS['cui']['node_target']
+            parent = LOOKUPS['cui']['parent']
+            values = LOOKUPS['cui']['values_dict']
+            assert cui in CUI_CHOICES, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{cui}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Find valid choices for `{bcolors.BOLD}{node_target}{bcolors.ENDC}` {bcolors.OKBLUE}by calling `myemld.describe_cui()`{bcolors.ENDC}.'
+
+            values['CUI'] = cui
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_cui()
+        
+        except AssertionError as a:
+            print(a)
+
+    def delete_cui(self):
+        """Delete value(s) from dataset title node(s)
+        
+        Args:
+            None
+
+        Examples:
+            myemld.delete_cui()
+        """
+        try:
+            node_xpath = LOOKUPS['cui']['node_xpath']
+            node_target= LOOKUPS['cui']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_cui()') 
+    
+    def describe_cui(self):
+        """Print the controlled unclassified information status pick-list to console
+
+        Args:
+            None
+
+        Examples:
+            myemld.describe_cui()
+
+        """
+        try:
+            if self.interactive == True:
+                print(f'`{bcolors.BOLD}CUI{bcolors.ENDC}` means controlled unclassified information. The following `{bcolors.BOLD}CUI{bcolors.ENDC}` choices are available in v. {CURRENT_RELEASE} of {APP_NAME}:')
+                print('----------')
+                for k, v in CUI_CHOICES.items():
+                    print(f'\'{bcolors.BOLD}{k}{bcolors.ENDC}\': {v}\n')
+        except:
+            print('error describe_cui()')
+    
+    def describe_int_rights(self):
+        """Print the intellectual rights pick-list to console
+
+        Args:
+            None
+
+        Examples:
+            myemld.describe_int_rights()
+
+        """
+        try:
+            if self.interactive == True:
+                print(f'The following `{bcolors.BOLD}intellectual rights{bcolors.ENDC}` license choices are available in v. {CURRENT_RELEASE} of {APP_NAME}:')
+                print('----------')
+                for k, v in LICENSE_TEXT.items():
+                    print(f'\'{bcolors.BOLD}{k}{bcolors.ENDC}\': {v}\n')
+        except:
+            print('error descrbe_int_rights()')
+    
+    def describe_citation(self):
+        """Print the citation choices pick-list to console
+
+        Args:
+            None
+
+        Examples:
+            myemld.describe_citation()
+
+        """
+        try:
+            if self.interactive == True:
+                print(f'The following `{bcolors.BOLD}citation styles{bcolors.ENDC}` choices are available in v. {CURRENT_RELEASE} of {APP_NAME}:')
+                print('----------')
+                for k, v in CITATION_STYLES.items():
+                    print(f'\'{bcolors.BOLD}{k}{bcolors.ENDC}\': {v}\n')
+        except:
+            print('error descrbe_int_rights()')
+    
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 
