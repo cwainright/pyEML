@@ -81,7 +81,7 @@ LOOKUPS = {
     },
     'temporal_coverage': {
         'node_xpath': './dataset/coverage/temporalCoverage',
-        'node_target': 'begin and/or end date',
+        'node_target': 'temporal coverage',
         'parent': './dataset/coverage',
         'values_dict': {
             'temporalCoverage': {
@@ -897,7 +897,7 @@ class Emld():
         Examples:
             myemld.delete_title()
             values_dict={'title': 'my new title'}
-            myemld._set_node(values_dict, node_target='title', node_xpath='./dataset/title', quiet=False)
+            myemld._set_node(values_dict, node_target='title', node_xpath='./dataset/title', parent = './dataset', quiet=False)
             myemld.get_title()
         """
         try:
@@ -942,18 +942,54 @@ class Emld():
 
             assert False in node_check.values(), 'Node deletion failed' # there must be at least one False in node_check or program will duplicate tags
             
-            # parent_node = nodeset[0]
-            parent_node_xpath = self._parent_node_finder(node_check)
+            # make sure all required parent nodes exist
+            parent_node_xpath = self._parent_node_finder(_dict=node_check, is_present=True) # find parent node that exists to check against the parent node we need `parent`
+            parent_node = self.root.findall(parent_node_xpath)
+            assert len(parent_node) == 1, 'Returned multiple parent nodes. Ambiguous data structure.'
+            parent_node = self.root.findall(parent_node_xpath)[0]
+
             if parent_node_xpath == parent: # if the parent node the program found is the parent node the program is expecting, proceed
-                parent_node = self.root.findall(parent_node_xpath)
-                assert len(parent_node) == 1, 'Returned multiple parent nodes. Ambiguous data structure.'
-                parent_node = self.root.findall(parent_node_xpath)[0]
                 self._serialize_nodes(_dict = values, target_node=parent_node)
+            else: # otherwise, build missing nodes
+                possible_nodes = node_check.copy()
+                del possible_nodes[node_xpath]
+                nodes_to_build = self._parent_node_finder(_dict=possible_nodes, is_present=False)
+                nodes_to_build = nodes_to_build.replace(parent_node_xpath, '')
+                nodes_to_build = nodes_to_build.split('/')
+                nodes_to_build = [x for x in nodes_to_build if x != '']
+                newvalues = {}
+                newvalues = self._rebuild_values(new_values=newvalues, values=values, nodes_to_build=nodes_to_build)
+                self._serialize_nodes(_dict = newvalues, target_node=parent_node)
 
         except AssertionError as a:
             print(a)
     
-    def _parent_node_finder(self, _dict:dict):
+    def _rebuild_values(self, new_values:dict, values:dict, nodes_to_build:list):
+        """Rebuild the values to serialize into a dictionary containing missing parent nodes
+
+        The purpose here is to allow a user to set values for which parent nodes are missing.
+        E.g., An Emld could be created without a `coverage` node. In that case, calling `set_temporal_coverage()` would error and
+        be unrecoverable for a user because its parent node, `coverage` doesn't exist and `Emld` doesn't let users create empty nodes.
+        For data integrity reasons, it doesn't make sense for users to ever create empty nodes.
+        `_rebuild_values()` solves this problem by adding missing parent nodes as needed so any `set...()` call should work.
+
+        Args:
+            new_values (dict): The dictionary containing parent node keys that were missing 
+            values (dict): A dictionary in the `values_dict` format of `LOOKUPS` that contains values that the user wants to set.
+            nodes_to_build (list): A list of xpath pieces (pieces of an xpath between each '/') that will become keys in `new_values`
+
+        Returns:
+            dict: A dictionary containing the values the user provided to their `set...()` call nested inside whatever parent nodes were missing
+        """
+        if len(nodes_to_build) == 1:
+            new_values[nodes_to_build[0]] = values
+            return new_values
+        elif len(nodes_to_build) > 1:
+            new_values[nodes_to_build[0]] = None
+            self._rebuild_values(new_values=new_values, values=values, nodes_to_build=nodes_to_build[-nodes_to_build[0]])
+
+    
+    def _parent_node_finder(self, _dict:dict, is_present:bool):
         """Find the furthest downstream node that exists in an element tree
 
         Args:
@@ -963,7 +999,7 @@ class Emld():
         mylist = list(_dict.values())
         minidices = []
         for i in range(0, len(mylist)):
-            if mylist[i] == True:
+            if mylist[i] == is_present:
                 minidices.append(i)
         myval = min(minidices)
         finalval = list(_dict.keys())[myval]

@@ -52,8 +52,9 @@ myfunc(mytestdict2)
 
 
 
-
-
+node = myemld.root.findall('./dataset/coverage')
+for child in node:
+    child.getparent().remove(child)
 
 
 
