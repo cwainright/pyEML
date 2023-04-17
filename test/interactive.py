@@ -18,7 +18,6 @@ myemld.set_temporal_coverage(begin_date='2020', end_date='2022')
 
 
 
-
 mytestdict1 = {
     'node4': False,
     'node3': True,

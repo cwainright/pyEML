@@ -21,6 +21,7 @@ LOOKUPS = {
     'title': {
         'node_xpath': './dataset/title',
         'node_target': 'title',
+        'parent': './dataset',
         'values_dict': {
             'title': None
             }
@@ -28,6 +29,7 @@ LOOKUPS = {
     'creator': {
         'node_xpath': './dataset/creator',
         'node_target': 'creator',
+        'parent': './dataset',
         'values_dict': {
             'creator': {
                 'individualName': {
@@ -42,6 +44,7 @@ LOOKUPS = {
     'keywords': {
         'node_xpath': './dataset/keywordSet',
         'node_target': 'keywords',
+        'parent': './dataset',
         'values_dict': {
             'keywordSet': {
                 'keyword': None
@@ -51,6 +54,7 @@ LOOKUPS = {
     'publisher': {
         'node_xpath': './dataset/publisher',
         'node_target': 'publisher',
+        'parent': './dataset',
         'values_dict': {
             'publisher': {
                 'address': {
@@ -70,6 +74,7 @@ LOOKUPS = {
     'pub_date': {
         'node_xpath': './dataset/pubDate',
         'node_target': 'publication date',
+        'parent': './dataset',
         'values_dict': {
             'pubDate': None
         }
@@ -77,6 +82,7 @@ LOOKUPS = {
     'temporal_coverage': {
         'node_xpath': './dataset/coverage/temporalCoverage',
         'node_target': 'begin and/or end date',
+        'parent': './dataset/coverage',
         'values_dict': {
             'temporalCoverage': {
                 'rangeOfDates': {
@@ -170,6 +176,7 @@ class Emld():
         try:
             node_xpath = LOOKUPS['title']['node_xpath']
             node_target= LOOKUPS['title']['node_target']
+            parent = LOOKUPS['title']['parent']
             values = LOOKUPS['title']['values_dict']
             assert title not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". `{node_target}` cannot be blank.'
             assert len(title) >= 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". {bcolors.BOLD}`{node_target}`{bcolors.ENDC} must be at least three characters.'
@@ -180,7 +187,7 @@ class Emld():
             else:
                 quiet=True
 
-            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
                 self.get_title()
@@ -253,6 +260,7 @@ class Emld():
         try:
             node_xpath = LOOKUPS['creator']['node_xpath']
             node_target= LOOKUPS['creator']['node_target']
+            parent= LOOKUPS['creator']['parent']
             dirty_vals = LOOKUPS['creator']['values_dict']
 
             if first not in (None, ''):
@@ -270,7 +278,7 @@ class Emld():
                 quiet=True
 
             cleanvals = self._delete_none(dirty_vals)
-            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
                 self.get_creator()
@@ -342,6 +350,7 @@ class Emld():
 
             node_xpath = LOOKUPS['keywords']['node_xpath']
             node_target= LOOKUPS['keywords']['node_target']
+            parent= LOOKUPS['keywords']['parent']
             values = LOOKUPS['keywords']['values_dict']
             values['keywordSet']['keyword'] = keywords
 
@@ -350,7 +359,7 @@ class Emld():
             else:
                 quiet=True
 
-            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
 
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
@@ -480,6 +489,8 @@ class Emld():
 
             node_xpath = LOOKUPS['publisher']['node_xpath']
             node_target= LOOKUPS['publisher']['node_target']
+            parent= LOOKUPS['publisher']['parent']
+            
             dirty_vals = LOOKUPS['publisher']['values_dict']
 
             dirty_vals['publisher']['organizationName'] = org
@@ -501,7 +512,7 @@ class Emld():
                 quiet=True
 
             cleanvals = self._delete_none(dirty_vals)
-            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
                 self.get_publisher()
@@ -574,6 +585,7 @@ class Emld():
         try:
             node_xpath = LOOKUPS['pub_date']['node_xpath']
             node_target= LOOKUPS['pub_date']['node_target']
+            parent= LOOKUPS['pub_date']['parent']
             values = LOOKUPS['pub_date']['values_dict']
             assert pub_date not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{pub_date}". `{node_target}` cannot be blank.'
             
@@ -583,7 +595,7 @@ class Emld():
             else:
                 quiet=True
 
-            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
                 self.get_pub_date()
@@ -680,8 +692,8 @@ class Emld():
             myemld.get_temporal_coverage()
         """
         try:
-            node_xpath = LOOKUPS['begin_end_date']['node_xpath']
-            node_target= LOOKUPS['begin_end_date']['node_target']
+            node_xpath = LOOKUPS['temporal_coverage']['node_xpath']
+            node_target= LOOKUPS['temporal_coverage']['node_target']
             if self.interactive == True:
                 pretty=True
                 quiet=False
@@ -705,6 +717,7 @@ class Emld():
 
             node_xpath = LOOKUPS['temporal_coverage']['node_xpath']
             node_target= LOOKUPS['temporal_coverage']['node_target']
+            parent= LOOKUPS['temporal_coverage']['parent']
             dirty_vals = LOOKUPS['temporal_coverage']['values_dict']
             dirty_vals['temporalCoverage']['rangeOfDates']['beginDate']['calendarDate'] = begin_date
             dirty_vals['temporalCoverage']['rangeOfDates']['endDate']['calendarDate'] = end_date
@@ -715,7 +728,7 @@ class Emld():
                 quiet=True
 
             cleanvals = self._delete_none(dirty_vals)
-            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, quiet=quiet)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
             if self.interactive == True:
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
                 self.get_temporal_coverage()
@@ -869,7 +882,7 @@ class Emld():
             if quiet == False:
                 print(e.msg)
         
-    def _set_node(self, values:dict, node_target:str, node_xpath:str, quiet:bool):
+    def _set_node(self, values:dict, node_target:str, node_xpath:str, parent:str, quiet:bool):
         """Set the value(s) at a node
 
         Args:
@@ -931,10 +944,11 @@ class Emld():
             
             # parent_node = nodeset[0]
             parent_node_xpath = self._parent_node_finder(node_check)
-            parent_node = self.root.findall(parent_node_xpath)
-            assert len(parent_node) == 1, 'Returned multiple parent nodes. Ambiguous data structure.'
-            parent_node = self.root.findall(parent_node_xpath)[0]
-            self._serialize_nodes(_dict = values, target_node=parent_node)
+            if parent_node_xpath == parent: # if the parent node the program found is the parent node the program is expecting, proceed
+                parent_node = self.root.findall(parent_node_xpath)
+                assert len(parent_node) == 1, 'Returned multiple parent nodes. Ambiguous data structure.'
+                parent_node = self.root.findall(parent_node_xpath)[0]
+                self._serialize_nodes(_dict = values, target_node=parent_node)
 
         except AssertionError as a:
             print(a)
