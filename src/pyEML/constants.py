@@ -97,6 +97,16 @@ LOOKUPS = {
                 'para': None
             }
         }
+    },
+    'status': {
+        'node_xpath': './dataset/maintenance',
+        'node_target': 'status',
+        'parent': './dataset',
+        'values_dict': {
+            'maintenance': {
+                'description': None
+            }
+        }
     }
 }
 

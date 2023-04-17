@@ -835,6 +835,82 @@ class Emld():
         except:
             print('error delete_int_rights()') 
     
+    def get_status(self):
+        """Get the dataset's maintenance status status
+        
+        Args:
+            None
+
+        Examples:
+            myemld.get_status()
+        """
+        try:
+            node_xpath = LOOKUPS['status']['node_xpath']
+            node_target= LOOKUPS['status']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_status()')
+
+    def set_status(self, status:str):
+        """Set the dataset's maintenance status status
+
+        Args:
+            status (str): The dataset's maintenance status; 'complete' or 'incomplete'.
+
+        Examples:
+            myemld.set_status(status='complete')
+        """
+        try:
+            node_xpath = LOOKUPS['status']['node_xpath']
+            node_target= LOOKUPS['status']['node_target']
+            parent = LOOKUPS['status']['parent']
+            values = LOOKUPS['status']['values_dict']
+            assert status in ('complete', 'incomplete'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{status}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Valid choices for `{bcolors.BOLD}{node_target}{bcolors.ENDC}` {bcolors.OKBLUE}are "complete" or "incomplete"{bcolors.ENDC}.'
+
+            values['maintenance']['description'] = status
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_status()
+        
+        except AssertionError as a:
+            print(a)
+
+    def delete_status(self):
+        """Delete the dataset's maintenance status status
+        
+        Args:
+            None
+
+        Examples:
+            myemld.delete_status()
+        """
+        try:
+            node_xpath = LOOKUPS['status']['node_xpath']
+            node_target= LOOKUPS['status']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_status()') 
+    
     def describe_cui(self):
         """Print the controlled unclassified information status pick-list to console
 
