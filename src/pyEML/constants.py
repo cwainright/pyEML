@@ -87,6 +87,16 @@ LOOKUPS = {
         'values_dict': {
             'CUI': None
         }
+    },
+    'int_rights': {
+        'node_xpath': './dataset/intellectualRights',
+        'node_target': 'int_rights',
+        'parent': './dataset',
+        'values_dict': {
+            'intellectualRights': {
+                'para': None
+            }
+        }
     }
 }
 
@@ -106,8 +116,6 @@ LICENSE_TEXT = {
     'restrict': 'This product has been determined to contain Controlled Unclassified Information (CUI) by the National Park Service, and is intended for internal use only. It is not published under an open license. Unauthorized access, use, and distribution are prohibited.'
     }
 
-#: `INT_RIGHTS_CHOICES` is pick list of intellectual rights choics used in `describe_int_rights()`, `get_int_rights()`, `set_int_rights()`
-INT_RIGHTS_CHOICES = LICENSE_TEXT.keys() 
 #: The current release version of {APP_NAME}
 CURRENT_RELEASE = '0.0.1'
 #: The name of this EML pipeline application

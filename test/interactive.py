@@ -6,7 +6,21 @@ from src.pyEML.emld import Emld
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+myemld.get_int_rights()
+myemld.delete_int_rights()
+myemld.describe_int_rights()
+myemld.set_int_rights(license='CCzero')
+
+
+
+
+
+
+
 myemld.get_cui()
+myemld.delete_cui()
+myemld.describe_cui()
+myemld.set_cui(cui='smoke')
 
 
 myemld.describe_citation()

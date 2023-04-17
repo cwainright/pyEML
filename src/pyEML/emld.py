@@ -13,7 +13,7 @@ License: MIT, license information at end of file
 
 import lxml.etree as etree
 from src.pyEML.error_classes import bcolors, MissingNodeException, InvalidDataStructure
-from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, INT_RIGHTS_CHOICES, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES
+from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES
 
 class Emld():
     """An object that holds data parsed from an EML-formatted xml file."""
@@ -707,17 +707,17 @@ class Emld():
         """Set the dataset's controlled unclassified information (CUI) status
         
         Args:
-            cui (str): The value you want to assign as the dataset's CUI status. Valid `cui` values come from `src.pyEML.constants.CUI_CHOICES`.
+            cui (str): The value you want to assign as the dataset's CUI status. `cui` is validated against `src.pyEML.constants.CUI_CHOICES`.
 
         Examples:
-            myemld.set_cui(cui='my new title')
+            myemld.set_cui(cui='PUBLIC')
         """
         try:
             node_xpath = LOOKUPS['cui']['node_xpath']
             node_target= LOOKUPS['cui']['node_target']
             parent = LOOKUPS['cui']['parent']
             values = LOOKUPS['cui']['values_dict']
-            assert cui in CUI_CHOICES, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{cui}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Find valid choices for `{bcolors.BOLD}{node_target}{bcolors.ENDC}` {bcolors.OKBLUE}by calling `myemld.describe_cui()`{bcolors.ENDC}.'
+            assert cui in CUI_CHOICES, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{cui}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Find valid choices for `{bcolors.BOLD}{node_target}{bcolors.ENDC}` {bcolors.OKBLUE}by calling `myemld.describe_{node_target}()`{bcolors.ENDC}.'
 
             values['CUI'] = cui
             if self.interactive == True:
@@ -734,7 +734,7 @@ class Emld():
             print(a)
 
     def delete_cui(self):
-        """Delete value(s) from dataset title node(s)
+        """Delete dataset's controlled unclassified information (CUI) status
         
         Args:
             None
@@ -752,6 +752,88 @@ class Emld():
             self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
         except:
             print('error delete_cui()') 
+    
+    def get_int_rights(self):
+        """Get the dataset's intellectual rights status
+
+        Args:
+            None
+
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_int_rights()
+        """
+        try:
+            node_xpath = LOOKUPS['int_rights']['node_xpath']
+            node_target= LOOKUPS['int_rights']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_int_rights()')
+
+    def set_int_rights(self, license:str=LICENSE_TEXT):
+        """Set the dataset's intellectual rights status
+        
+        Args:
+            cui (str): The value you want to assign as the dataset's intellectual rights status. `license` is validated against `src.pyEML.constants.CUI_CHOICES`.
+
+        Examples:
+            myemld.set_int_rights(cui='CCzero')
+            myemld.set_int_rights(cui='public_domain')
+            myemld.set_int_rights(cui='restrict')
+        """
+        try:
+            node_xpath = LOOKUPS['int_rights']['node_xpath']
+            node_target= LOOKUPS['int_rights']['node_target']
+            parent = LOOKUPS['int_rights']['parent']
+            values = LOOKUPS['int_rights']['values_dict']
+            assert license in LICENSE_TEXT, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{license}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Find valid choices for `{bcolors.BOLD}{node_target}{bcolors.ENDC}` {bcolors.OKBLUE}by calling `myemld.describe_{node_target}()`{bcolors.ENDC}.'
+
+            values['intellectualRights']['para'] = LICENSE_TEXT[license]
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_int_rights()
+        
+        except AssertionError as a:
+            print(a)
+
+    def delete_int_rights(self):
+        """Delete the dataset's intellectual rights status
+        
+        Args:
+            None
+
+        Examples:
+            myemld.delete_int_rights()
+        """
+        try:
+            node_xpath = LOOKUPS['int_rights']['node_xpath']
+            node_target= LOOKUPS['int_rights']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_int_rights()') 
     
     def describe_cui(self):
         """Print the controlled unclassified information status pick-list to console
