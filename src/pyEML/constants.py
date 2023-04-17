@@ -107,6 +107,32 @@ LOOKUPS = {
                 'description': None
             }
         }
+    },
+    'doi': {
+        'node_xpath': './dataset/alternateIdentifier',
+        'node_target': 'doi',
+        'parent': './dataset',
+        'values_dict': {
+            'alternateIdentifier': None,
+            'usageCitation': {
+                'alternateIdentifier': None
+            }
+        }
+    },
+    'contact': {
+        'node_xpath': './dataset/contact',
+        'node_target': 'contact',
+        'parent': './dataset',
+        'values_dict': {
+            'contact': {
+                'individualName': {
+                'givenName': None,
+                'surName': None
+            },
+            'organizationName': None,
+            'electronicMailAddress': None
+            }
+        }
     }
 }
 

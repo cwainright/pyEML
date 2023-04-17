@@ -6,6 +6,27 @@ from src.pyEML.emld import Emld
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+
+myemld.get_contact()
+myemld.delete_contact()
+myemld.set_contact(first='albus', last='dumbledore', org='hogwarts', email={'email':None})
+
+myemld.get_doi()
+myemld.delete_doi()
+myemld.set_doi(doi=1231231)
+
+
+
+
+
+
+
+
+
+
+
+
+
 myemld.get_status()
 myemld.delete_status()
 myemld.set_status(status='complete')

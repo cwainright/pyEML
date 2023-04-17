@@ -159,7 +159,7 @@ class Emld():
                     return node
 
         except:
-            print('problem get_creator')
+            print('problem get_creator()')
 
     def set_creator(self, first:str=None, last:str=None, org:str=None, email:str=None):
         """Specify the dataset creator's name, organization, and email
@@ -178,14 +178,18 @@ class Emld():
             node_target= LOOKUPS['creator']['node_target']
             parent= LOOKUPS['creator']['parent']
             dirty_vals = LOOKUPS['creator']['values_dict']
-
+            
             if first not in (None, ''):
+                assert isinstance(first, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(first)}: {first}.\nFirst name must be of type str.\nE.g., myemld.set_creator(first="Albus")'
                 dirty_vals['creator']['individualName']['givenName'] = first
             if last not in (None, ''):
+                assert isinstance(last, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(last)}: {last}.\Last name must be of type str.\nE.g., myemld.set_creator(last="Fumblesnore")'
                 dirty_vals['creator']['individualName']['surName'] = last
             if org not in (None, ''):
+                assert isinstance(org, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(org)}: {org}.\Organization name must be of type str.\nE.g., myemld.set_creator(org="House Gryffinsnore")'
                 dirty_vals['creator']['organizationName'] = org
             if email not in (None, ''):
+                assert isinstance(email, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(email)}: {email}.\Email must be of type str.\nE.g., myemld.set_creator(email="wellsley.r@gryffinsnore.edu")'
                 dirty_vals['creator']['electronicMailAddress'] = email
 
             if self.interactive == True:
@@ -199,6 +203,8 @@ class Emld():
                 print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
                 self.get_creator()
             
+        except AssertionError as a:
+            print(a)
         except:
             print('error set_creator()')
 
@@ -841,6 +847,10 @@ class Emld():
         Args:
             None
 
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
         Examples:
             myemld.get_status()
         """
@@ -869,6 +879,7 @@ class Emld():
 
         Examples:
             myemld.set_status(status='complete')
+            myemld.set_status(status='incomplete')
         """
         try:
             node_xpath = LOOKUPS['status']['node_xpath']
@@ -892,7 +903,7 @@ class Emld():
             print(a)
 
     def delete_status(self):
-        """Delete the dataset's maintenance status status
+        """Delete the dataset's maintenance status
         
         Args:
             None
@@ -967,6 +978,188 @@ class Emld():
                     print(f'\'{bcolors.BOLD}{k}{bcolors.ENDC}\': {v}\n')
         except:
             print('error descrbe_int_rights()')
+    
+    def get_doi(self):
+        """Get the dataset's doi (digital object identifier)
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_doi()
+        """
+        try:
+            node_xpath = LOOKUPS['doi']['node_xpath']
+            node_target= LOOKUPS['doi']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_doi()')
+
+    def set_doi(self, doi):
+        """Set the dataset's doi (digital object identifier)
+
+        Args:
+            doi (str or int): A digital object identifier (doi); 7-digit unique identifier for a dataset. https://www.doi.org/
+
+        Examples:
+            myemld.set_doi(doi='1234567')
+            myemld.set_doi(doi=1234567)
+        """
+        try:
+            node_xpath = LOOKUPS['doi']['node_xpath']
+            node_target= LOOKUPS['doi']['node_target']
+            parent = LOOKUPS['doi']['parent']
+            values = LOOKUPS['doi']['values_dict']
+            assert isinstance(doi, (str, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{doi}" is {type(doi)} which is invalid for `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Valid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`{bcolors.OKBLUE} values are of type str or int. E.g., "1234567" or 1234567{bcolors.ENDC}.'
+            doi = str(doi)
+            assert len(doi) == 7, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{doi}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Valid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`{bcolors.OKBLUE} values are seven characters long. E.g., "1234567" or 1234567{bcolors.ENDC}.'
+
+            values['alternateIdentifier'] = doi # doi
+            values['usageCitation']['alternateIdentifier'] = doi # drr_doi
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_doi()
+        
+        except AssertionError as a:
+            print(a)
+
+    def delete_doi(self):
+        """Delete the dataset's doi (digital object identifier)
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_doi()
+        """
+        try:
+            node_xpath = LOOKUPS['doi']['node_xpath']
+            node_target= LOOKUPS['doi']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_doi()') 
+    
+    def get_contact(self):
+        """Get information about the dataset contact
+
+        Args:
+            None
+
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_contact()
+        """
+        try:
+            node_xpath = LOOKUPS['contact']['node_xpath']
+            node_target= LOOKUPS['contact']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+
+        except:
+            print('problem get_contact()')
+
+    def set_contact(self, first:str=None, last:str=None, org:str=None, email:str=None):
+        """Set information about the dataset contact
+
+        Args:
+            first (str, optional): The dataset contact's first name.. Defaults to None.
+            last (str, optional): The dataset contact's last name.. Defaults to None.
+            org (str, optional): The dataset contact's organization (e.g., company, government agency). Defaults to None.
+            email (str, optional): The dataset creator's email address. Defaults to None.
+
+        Examples:
+            myemld.set_contact(first='Albus', last='Fumblesnore')
+        """
+        try:
+            node_xpath = LOOKUPS['contact']['node_xpath']
+            node_target= LOOKUPS['contact']['node_target']
+            parent= LOOKUPS['contact']['parent']
+            dirty_vals = LOOKUPS['contact']['values_dict']
+            
+            if first not in (None, ''):
+                assert isinstance(first, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(first)}: {first}.\nFirst name must be of type str.\nE.g., myemld.set_contact(first="Albus")'
+                dirty_vals['contact']['individualName']['givenName'] = first
+            if last not in (None, ''):
+                assert isinstance(last, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(last)}: {last}.\Last name must be of type str.\nE.g., myemld.set_contact(last="Fumblesnore")'
+                dirty_vals['contact']['individualName']['surName'] = last
+            if org not in (None, ''):
+                assert isinstance(org, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(org)}: {org}.\Organization name must be of type str.\nE.g., myemld.set_contact(org="House Gryffinsnore")'
+                dirty_vals['contact']['organizationName'] = org
+            if email not in (None, ''):
+                assert isinstance(email, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(email)}: {email}.\Email must be of type str.\nE.g., myemld.set_contact(email="wellsley.r@gryffinsnore.edu")'
+                dirty_vals['contact']['electronicMailAddress'] = email
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            cleanvals = self._delete_none(dirty_vals)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_contact()
+            
+        except AssertionError as a:
+            print(a)
+        except:
+            print('error set_contact()')
+
+    def delete_contact(self):
+        """Delete information about the dataset contact
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_creator()
+        """
+        try:
+            node_xpath = LOOKUPS['contact']['node_xpath']
+            node_target= LOOKUPS['contact']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet)  
+
+        except:
+            print('error delete_contact()')
     
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
@@ -1176,13 +1369,14 @@ class Emld():
             print(a)
     
     def _rebuild_values(self, new_values:dict, values:dict, nodes_to_build:list):
-        """Rebuild the values to serialize into a dictionary containing missing parent nodes
+        """Add missing parent keys upstream in a `values` dictionary when etree.root is missing parent nodes
 
-        The purpose here is to allow a user to set values for which parent nodes are missing.
-        E.g., An Emld could be created without a `coverage` node. In that case, calling `set_temporal_coverage()` would error and
-        be unrecoverable for a user because its parent node, `coverage` doesn't exist and `Emld` doesn't let users create empty nodes.
-        For data integrity reasons, it doesn't make sense for users to ever create empty nodes.
-        `_rebuild_values()` solves this problem by adding missing parent nodes as needed so any `set...()` call should work.
+        `_rebuild_values()` allows a user to set values for which parent nodes are missing.
+        E.g., An `Emld` with no `coverage` node would be valid EML because `coverage` has minOccurs=0. https://eml.ecoinformatics.org/schema/
+        In that case, calling `set_temporal_coverage()` would error because its parent node, `coverage` doesn't exist,
+        and would be unrecoverable for a user because `Emld` doesn't let users assign empty ('', None, 'None') values at nodes.
+        For data integrity reasons, it doesn't make sense for users to ever create empty nodes; users can simply delete nodes instead.
+        `_rebuild_values()` adds missing parents to the `values` dictionary, which lets users `set...()` despite missing parent nodes.
 
         Args:
             new_values (dict): The dictionary containing parent node keys that were missing 
@@ -1201,11 +1395,16 @@ class Emld():
 
     
     def _parent_node_finder(self, _dict:dict, is_present:bool):
-        """Find the furthest downstream node that exists in an element tree
+        """Find the most downstream parent node that exists in an element tree
 
         Args:
             _dict (dict): A dictionary where keys are xpaths of nodes in an element tree and values are True or False.
                 True means there is an element at that xpath. False means there is no element at that xpath.
+            is_present (bool): If True, function looks for the furthest downstream node that does exist.
+                If False, function looks for furthest downstream that does *not* exist.
+
+        Returns:
+            str: the xpath of the furthest downstream parent that exists (if `is_present == True`) or does not exist (if `is_present == False`).
         """
         mylist = list(_dict.values())
         minidices = []
