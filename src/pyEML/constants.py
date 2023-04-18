@@ -178,7 +178,24 @@ LOOKUPS = {
                 'para': None
             }
         }
+    },
+    'lit_cited': {
+        'node_xpath': './dataset/literatureCited',
+        'node_target': 'lit_cited',
+        'parent': './dataset',
+        'values_dict': {
+            'literatureCited': {
+                'bibtex': None
+            }
+        }
     }
+}
+
+#: `AVAILABLE_ATTRIBUTES` is a list of the available top-line attributes for EML https://eml.ecoinformatics.org/schema/
+AVAILABLE_ATTRIBUTES = {
+    'packageId': "A globally unique identifier for the data package described by this EML metadata document that can be used to cite it elsewhere. example: https://doi.org/10.5063/F17P8WGK",
+    'scope': 'The scope of the identifier. Scope is generally set to either "system", meaning that it is scoped according to the "system" attribute, or "document" if it is only to be in scope within this single document instance. example: "system"',
+    'system': 'Always assigned value of "unknown". No additional information available at https://eml.ecoinformatics.org/schema/'
 }
 
 #: `CUI_CHOICES` is pick-list of controlled unclassified information (CUI) options used in `describe_cui()`, `get_cui()`, and `set_cui()`.

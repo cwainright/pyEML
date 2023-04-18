@@ -13,8 +13,9 @@ License: MIT, license information at end of file
 
 import lxml.etree as etree
 from src.pyEML.error_classes import bcolors, MissingNodeException, InvalidDataStructure
-from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES
+from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES, AVAILABLE_ATTRIBUTES
 from datetime import datetime
+import json
 
 class Emld():
     """An object that holds data parsed from an EML-formatted xml file."""
@@ -1511,6 +1512,126 @@ class Emld():
         except:
             print('error delete_abstract()') 
     
+    def get_attributes(self):
+        """Get the dataset's xml attributes
+
+        Args:
+            None
+        
+        Returns:
+            str: attributes printed
+
+        Examples:
+            myemld.get_abstract()
+        """
+        try:
+            if self.interactive == True:
+                for attribute in self.root.keys():
+                    if attribute in AVAILABLE_ATTRIBUTES: # stops program from showing namespaces
+                        print(f'{attribute}={self.root.get(attribute)}')
+
+        except:
+            print('error get_attributes()')
+
+    def set_attribute(self, attribute:str, value:str):
+        try:
+            assert attribute in AVAILABLE_ATTRIBUTES.keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided `attribute` "{attribute}".\nOnly valid attributes can be set.\nUse `myemld.get_attributes()` to see which attributes your dataset has or delete all attributes:\nmyemld.delete_attribute(attribute="all").\nCall `myemld.describe_attributes()` for a pick-list of attributes and their descriptions.'
+            assert value not in (None, '', 'NA', 'Na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided `attribute` "{attribute}".\nAttributes cannot be blank.\nYou can delete attributes via:\nmyemld.delete_attribute().\nCall `myemld.describe_attributes()` for a pick-list of attributes and their descriptions.'
+
+            if self.interactive == True:
+                if attribute in self.root.keys():
+                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYou are about to overwrite a metadata `{bcolors.BOLD}attribute{bcolors.ENDC}`:')
+                    print(f'{attribute}={self.root.get(attribute)}\n')
+                    overwrite = input(f'{bcolors.BOLD}Do you want to delete this attribute?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
+                    print(f'User input: {overwrite}\n')
+                    if overwrite.lower() == 'y':
+                        force=True
+                    else:
+                        print(f'`{bcolors.BOLD}attribute{bcolors.ENDC}` deletion cancelled.')
+                        force=False
+            else:
+                force = True
+
+            if force == True:
+                self.root.set(attribute, value)
+                if self.interactive == True:
+                    print(f'`{bcolors.BOLD}{attribute}{bcolors.ENDC}` set:')
+                    print(f'{attribute}={self.root.get(attribute)}')
+
+        except AssertionError as a:
+            print(a)
+        except:
+            print('problem set_attributes()')
+
+    def delete_attribute(self, attribute:str):
+        """Delete one or more of the dataset's xml attributes
+
+        Args:
+            attribute (str): The name of the attribute to delete.
+        """
+        try:
+            newlist = AVAILABLE_ATTRIBUTES.keys().copy()
+            newlist.append('all')
+            assert attribute in (newlist), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided `attribute` "{attribute}".\nOnly valid attributes or "all" attributes can be deleted.\nUse `myemld.get_attributes()` to see which attributes your dataset has or delete all attributes:\nmyemld.delete_attribute(attribute="all").\nCall `myemld.describe_attributes()` for a pick-list of attributes and their descriptions.'
+            assert attribute in self.root.keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided `attribute` "{attribute}".\nYour dataset does not have an `attribute` {attribute}.\nUse `myemld.get_attributes()` to see which attributes your dataset has or delete all attributes:\nmyemld.delete_attribute(attribute="all").\nCall `myemld.describe_attributes()` for a pick-list of attributes and their descriptions.'
+
+            if self.interactive == True:
+                if attribute == 'all':
+                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYou are about to delete all of your metadata `{bcolors.BOLD}attributes{bcolors.ENDC}`:')
+                    self.get_attributes()
+                    overwrite = input(f'{bcolors.BOLD}Do you want to delete all attributes?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
+                else:
+                    print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYou are about to delete a metadata `{bcolors.BOLD}attribute{bcolors.ENDC}`:')
+                    print(f'{attribute}={self.root.get(attribute)}')
+                    overwrite = input(f'{bcolors.BOLD}Do you want to delete this attribute?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
+                print(f'User input: {overwrite}')
+                if overwrite.lower() == 'y':
+                    force=True
+                else:
+                    print(f'`{bcolors.BOLD}attribute{bcolors.ENDC}` deletion cancelled.')
+                    force=False
+            else:
+                force=True
+
+            if force == True:
+                deleted_attributes = []
+                if attribute == 'all':
+                    for attribute in self.root.keys():
+                        if attribute in AVAILABLE_ATTRIBUTES.keys(): # don't delete namespaces
+                            del self.root.attrib[attribute]
+                            deleted_attributes.append(attribute)
+                else:
+                    del self.root.attrib[attribute]
+                    deleted_attributes.append(attribute)
+                if self.interactive == True:
+                    print(f'`{bcolors.BOLD}attributes{bcolors.ENDC}` deleted:')
+                    for att in deleted_attributes:
+                        print(att)
+            
+        except AssertionError as a:
+            print(a)
+        except:
+            print('problem delete_attribute()')
+
+    def describe_attributes(self):
+        """Print the citation choices pick-list to console
+
+        Args:
+            None
+
+        Examples:
+            myemld.describe_attributes()
+
+        """
+        try:
+            if self.interactive == True:
+                print(f'The following xml `{bcolors.BOLD}attributes{bcolors.ENDC}` can be edited in v. {CURRENT_RELEASE} of {APP_NAME}:')
+                print('----------')
+                for k, v in AVAILABLE_ATTRIBUTES.items():
+                    print(f'\'{bcolors.BOLD}{k}{bcolors.ENDC}\': {v}\n')
+        except:
+            print('error describe_attributes()')
+
     def make_nps(self):
         pass
     

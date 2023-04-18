@@ -7,27 +7,48 @@ from datetime import datetime
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+myemld.get_attributes()
+myemld.set_attribute(
+    attribute='wtf',
+    value='newvalue'
+)
+myemld.delete_attribute(attribute="some")
+myemld.delete_attribute(attribute="packageId")
+myemld.get_attributes()
+myemld.describe_attributes()
 
 
 
 
+myemld.root.get("packageId")
+myemld.root.set("packageId", 'mynewpackageid')
+myemld.root.values()
+del myemld.root.attrib['packageId']
+myemld.root.keys()
+
+myattribs = myemld.root.attrib
+import json
+print(json.dumps(myattribs, indent=4))
+for k, v in myattribs:
+    print(f'Key: {k}')
+    print(f'Value: {v}')
+type(myattribs)
+
+'packageId' in myemld.root.keys()
+
+for attribute in myemld.root.keys():
+    print(f'{attribute}:')
 
 
 
 
+attribute="all"
+assert attribute in AVAILABLE_ATTRIBUTES
+attribute in (AVAILABLE_ATTRIBUTES, 'all')
+attribute in AVAILABLE_ATTRIBUTES
 
-
-
-
-
-
-
-
-
-
-
-
-
+newlist = AVAILABLE_ATTRIBUTES.copy()
+newlist.append('all')
 
 
 
