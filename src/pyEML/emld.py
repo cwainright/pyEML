@@ -712,11 +712,11 @@ class Emld():
         except:
             print('problem get_cui()')
 
-    def set_cui(self, cui:str=CUI_CHOICES):
+    def set_cui(self, cui:str):
         """Set the dataset's controlled unclassified information (CUI) status
         
         Args:
-            cui (str): The value you want to assign as the dataset's CUI status. `cui` is validated against `src.pyEML.constants.CUI_CHOICES`.
+            cui (str): The value you want to assign as the dataset's CUI status. `cui` is validated against `src.pyEML.constants.CUI_CHOICES.keys()`.
 
         Examples:
             myemld.set_cui(cui='PUBLIC')
@@ -726,7 +726,7 @@ class Emld():
             node_target= LOOKUPS['cui']['node_target']
             parent = LOOKUPS['cui']['parent']
             values = LOOKUPS['cui']['values_dict']
-            assert cui in CUI_CHOICES, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{cui}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Find valid choices for `{bcolors.BOLD}{node_target}{bcolors.ENDC}` {bcolors.OKBLUE}by calling `myemld.describe_{node_target}()`{bcolors.ENDC}.'
+            assert cui in CUI_CHOICES.keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{cui}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Find valid choices for `{bcolors.BOLD}{node_target}{bcolors.ENDC}` {bcolors.OKBLUE}by calling `myemld.describe_{node_target}()`{bcolors.ENDC}.'
 
             values['CUI'] = cui
             if self.interactive == True:
@@ -1519,7 +1519,7 @@ class Emld():
             None
         
         Returns:
-            str: attributes printed
+            str: xml attribute names and values printed to console
 
         Examples:
             myemld.get_abstract()
@@ -1534,6 +1534,18 @@ class Emld():
             print('error get_attributes()')
 
     def set_attribute(self, attribute:str, value:str):
+        """Set the dataset's xml attributes
+
+        Args:
+            attribute (str): The name of the attribute to set.
+            value (str): The value to assign at `attribute`.
+
+        Examples:
+            myemld.set_attribute(
+                attribute='packageId',
+                value='newvalue'
+            )
+        """
         try:
             assert attribute in AVAILABLE_ATTRIBUTES.keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided `attribute` "{attribute}".\nOnly valid attributes can be set.\nUse `myemld.get_attributes()` to see which attributes your dataset has or delete all attributes:\nmyemld.delete_attribute(attribute="all").\nCall `myemld.describe_attributes()` for a pick-list of attributes and their descriptions.'
             assert value not in (None, '', 'NA', 'Na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided `attribute` "{attribute}".\nAttributes cannot be blank.\nYou can delete attributes via:\nmyemld.delete_attribute().\nCall `myemld.describe_attributes()` for a pick-list of attributes and their descriptions.'
@@ -1613,8 +1625,102 @@ class Emld():
         except:
             print('problem delete_attribute()')
 
+    def get_lit_cited(self):
+        """Get the dataset's cited literature
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_lit_cited()
+        """
+        try:
+            node_xpath = LOOKUPS['lit_cited']['node_xpath']
+            node_target= LOOKUPS['lit_cited']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_lit_cited()')
+
+    def set_lit_cited(self, citations:list):
+        """Set the dataset's cited literature
+
+        Args:
+            citations (list): A list strings. Each string is one pre-formatted citation.
+
+        Examples:
+            mycitations = [
+                '
+                @BOOK{Person2021,
+                title="This is another article title",
+                author="Person",
+                year="2021"
+                '
+                ]
+            myemld.set_lit_cited(self, citations=mycitations)
+        """
+        try:
+            node_xpath = LOOKUPS['lit_cited']['node_xpath']
+            node_target= LOOKUPS['lit_cited']['node_target']
+            parent= LOOKUPS['lit_cited']['parent']
+
+            assert isinstance(citations, list), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{citations}". {node_target} must be a list.'
+            for citation in citations:
+                assert citation not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{citation}". Citations cannot be blank.'
+                assert isinstance(citation, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(citation)}: {citation}.\nEach citation must be type str.'
+            
+            values = LOOKUPS['lit_cited']['values_dict']
+            values['literatureCited']['bibtex'] = citations
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_lit_cited()
+
+        except AssertionError as a:
+            print(a)
+
+    def delete_lit_cited(self):
+        """Delete the dataset's cited literature
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_lit_cited()
+        """
+        try:
+            node_xpath = LOOKUPS['lit_cited']['node_xpath']
+            node_target= LOOKUPS['lit_cited']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_lit_cited()') 
+    
     def describe_attributes(self):
-        """Print the citation choices pick-list to console
+        """Print the xml attribute pick-list
 
         Args:
             None

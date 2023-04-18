@@ -7,6 +7,36 @@ from datetime import datetime
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+myemld.get_lit_cited()
+myemld.delete_lit_cited()
+mycitations = ['firsticitation', 'secondcitation']
+myemld.set_lit_cited(
+    citations=mycitations
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 myemld.get_attributes()
 myemld.set_attribute(
     attribute='wtf',
