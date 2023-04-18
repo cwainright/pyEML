@@ -5,7 +5,7 @@ CURRENT_RELEASE = '0.0.1'
 #: The name of this EML pipeline application
 APP_NAME = 'pyEML' # the name of the app; to be used in `pip install pyEML` or similar
 
-#: `LOOKUPS` holds abstracted EML-schema information that an `Emld`'s get, set, and delete methods needs.
+#: `LOOKUPS` holds abstracted EML-schema information that an `Emld`'s get, set, and delete methods need.
 LOOKUPS = {
     'title': {
         'node_xpath': './dataset/title',
@@ -167,6 +167,16 @@ LOOKUPS = {
         'parent': './dataset/additionalInfo',
         'values_dict': {
             'para': None
+        }
+    },
+    'abstract': {
+        'node_xpath': './dataset/abstract',
+        'node_target': 'abstract',
+        'parent': './dataset',
+        'values_dict': {
+            'abstract': {
+                'para': None
+            }
         }
     }
 }

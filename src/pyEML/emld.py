@@ -1431,6 +1431,86 @@ class Emld():
         except:
             print('error delete_protocol_citation()') 
     
+    def get_abstract(self):
+        """Get the dataset's abstract
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_abstract()
+        """
+        try:
+            node_xpath = LOOKUPS['abstract']['node_xpath']
+            node_target= LOOKUPS['abstract']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_abstract()')
+
+    def set_abstract(self, abstract:str):
+        """Set the dataset's abstract
+        
+        Args:
+            title (str): The title that you want to assign to your dataset.
+
+        Examples:
+            myemld.set_title(title='my new title')
+        """
+        try:
+            node_xpath = LOOKUPS['abstract']['node_xpath']
+            node_target= LOOKUPS['abstract']['node_target']
+            parent = LOOKUPS['abstract']['parent']
+            values = LOOKUPS['abstract']['values_dict']
+            assert abstract not in ('', None, 'NA', 'na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{abstract}". `{node_target}` cannot be blank.'
+
+            values['abstract']['para'] = abstract
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_abstract()
+        
+        except AssertionError as a:
+            print(a)
+
+    def delete_abstract(self):
+        """Delete the dataset's protocol citation
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_abstract()
+        """
+        try:
+            node_xpath = LOOKUPS['abstract']['node_xpath']
+            node_target= LOOKUPS['abstract']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_abstract()') 
+    
     def make_nps(self):
         pass
     
@@ -1561,7 +1641,7 @@ class Emld():
                     #             elm.getparent().remove(elm)
                 else:
                     if len(node) == 1:
-                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nMetadata package contains a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nMetadata package contains one `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
                     if len(node) > 1:
                         print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nMetadata package contains {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
                     counter = 1

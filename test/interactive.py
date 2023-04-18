@@ -7,23 +7,35 @@ from datetime import datetime
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
-myauthors = [
-    {
-        'first': 'albus',
-        'last': 'dumbledore'
-    },
-    {
-        'first': 'ronald',
-        'last': 'weasley'
-    }
-]
-myemld.set_protocol_citation(
-    authors=myauthors,
-    title='Pride and Prejudice',
-    version='1.0',
-    date='2021-01-01',
-    style='chicago'
-    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 mydate = '2021-01-01'
