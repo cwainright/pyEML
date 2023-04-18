@@ -14,6 +14,7 @@ License: MIT, license information at end of file
 import lxml.etree as etree
 from src.pyEML.error_classes import bcolors, MissingNodeException, InvalidDataStructure
 from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES
+from datetime import datetime
 
 class Emld():
     """An object that holds data parsed from an EML-formatted xml file."""
@@ -1192,6 +1193,19 @@ class Emld():
             print('problem get_usage_citation()')
 
     def set_usage_citation(self, doi_url:str=None, title:str=None, creator:str=None, doi:str=None, id:str=None):
+        """Set the dataset's usage citation
+
+        Args:
+            doi_url (str, optional): The url to the dataset. E.g., https://doi.org/10.36967/1234567. Defaults to None.
+            title (str, optional): The title given to the dataset at `doi_url`. Defaults to None.
+            creator (str, optional): The metadata creator's name. Usually the same first and last name as `myemld.get_creator()`. Defaults to None.
+            doi (str, optional): Dataset's digital object identifier. Usually the same as `myemld.get_doi()`. Defaults to None.
+            id (str, optional): A unique identifier for the usage citation so it can be referenced as a unit from within the metadata package. Defaults to None.
+
+        Examples:
+            myemld.set_usage_citation(doi_url='https://doi.org/10.36967/1234567', title='My data product', creator='Albus', doi='1234567', id='associatedDRR')
+            myemld.set_usage_citation(doi_url='https://doi.org/10.36967/1234567')
+        """
         try:
             node_xpath = LOOKUPS['usage_citation']['node_xpath']
             node_target= LOOKUPS['usage_citation']['node_target']
@@ -1250,12 +1264,239 @@ class Emld():
         except:
             print('error usage_citation()') 
 
+    def get_protocol_citation(self):
+        """Get the dataset's protocol citation
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_protocol_citation()
+        """
+        try:
+            node_xpath = LOOKUPS['protocol_citation']['node_xpath']
+            node_target= LOOKUPS['protocol_citation']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_protocol_citation()')
+
+    def set_protocol_citation(self, authors:list=None, title:str=None, date:str=None, version:str=None, doc_type:str=None, url:str=None, etc:str=None, style:str=None):
+        """Set the dataset's protocol citation
+
+        Takes in pieces of a citation and formats those pieces into a paragraph citation matching the specified citation `style`.
+
+        Args:
+            authors (list of dicts, optional): A list of dictionaries. Each dictionary contains author names. See Examples. Defaults to None.
+            title (str, optional): The protocol title. Defaults to None.
+            date (str, optional): The protocol publication date in YYYY-MM-DD format. Defaults to None.
+            version (str, optional): The protocol version number. Defaults to None.
+            doc_type (str, optional): The document type of the protocol. Defaults to None.
+            url (str, optional): The url of the protocol. Defaults to None.
+            etc (str, optional): Additional information to append to the end of the citation. Defaults to None.
+            style (str, optional): The style of the citation to be generated. Defaults to None.
+
+        Examples:
+            myauthors = [
+                    {
+                        'first': 'First author's first name',
+                        'last': 'First author's last name'
+                    },
+                    {
+                        'first': 'Second author's first name',
+                        'middle': 'Second author's middle name',
+                        'last': 'Second author's last name'
+                    },
+                    {
+                        'last': 'Third author's last name'
+                    }
+                ]
+            myemld.set_protocol_citation(
+                authors=myauthors,
+                title='My dataset protocol title',
+                version='1.0',
+                date='2021-01-01',
+                style='chicago'
+                )
+        """
+        try:
+            # validate
+            if authors is not None:
+                assert isinstance(authors, (list, tuple)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(authors)}: {authors}.\Author names must be a list of dicts or tuple of dicts.\nE.g.,\nmyemld.set_{node_target}(authors=[{"first": "Albus", "last": "Fumblesnore"}, {"first": "Ronaldus", "middle": "Albert", "last": "Weaslee"}])'   
+                for element in authors:
+                    assert isinstance(element, dict), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(element)}: {element}.\Author names must be a list of dicts or tuple of dicts.\nE.g.,\nmyemld.set_{node_target}(authors=[{"first": "Albus", "last": "Fumblesnore"}, {"first": "Ronaldus", "middle": "Albert", "last": "Weaslee"}])'   
+                    for name in element:
+                        assert isinstance(name, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(name)}: {name}.\Author first and last name must type str.\nE.g.,\nmyemld.set_{node_target}(authors=[{"first": "Albus", "last": "Fumblesnore"}, {"first": "Ronaldus", "middle": "Albert", "last": "Weaslee"}])'       
+                        assert name not in ('', 'None', 'NA', 'na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {name}.\Author first and last name cannot be blank.\nE.g.,\nmyemld.set_{node_target}(authors=[{"first": "Albus", "last": "Fumblesnore"}, {"first": "Ronaldus", "middle": "Albert", "last": "Weaslee"}])'       
+            
+            if title is not None:
+                assert isinstance(title, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(title)}: {title}.\Title must be of type str.\nE.g., myemld.set_{node_target}(title="Monitoring data 2022")'
+                assert title not in ('', 'None', 'NA', 'na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {title}.\Title cannot be blank.\nE.g.,\nmyemld.set_{node_target}(title="Monitoring data 2022")'  
+            
+            if date is not None:
+                assert isinstance(date, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(date)}: {date}.\Date must be of type str.\nE.g., myemld.set_{node_target}(date="2022-01-01")'
+                assert date not in ('', 'None', 'NA', 'na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {date}.\Date cannot be blank.\nE.g.,\nmyemld.set_{node_target}(date="2022-01-01")'  
+                newdate = datetime.strptime(date, "%Y-%m-%d").date()
+
+            if version is not None:
+                assert isinstance(version, (str, int, float)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(version)}: {version}.\Version must be of type str.\nE.g., myemld.set_{node_target}(version="1.1")'
+                version = str(version)
+                assert version not in ('', 'None', 'NA', 'na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {version}.\Version cannot be blank.\nE.g.,\nmyemld.set_{node_target}(version="1.1")'  
+            
+            if doc_type is not None:
+                assert isinstance(doc_type, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(doc_type)}: {doc_type}.\Document type must be of type str.\nE.g., myemld.set_{node_target}(doc_type="document reference report)'
+                assert doc_type not in ('', 'None', 'NA', 'na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {doc_type}.\Document type cannot be blank.\nE.g.,\nmyemld.set_{node_target}(doc_type="document reference report")'  
+            
+            if url is not None:
+                assert isinstance(url, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(url)}: {url}.\nURL must be of type str.\nE.g., myemld.set_{node_target}(url="doi.org/1234567")'
+                assert url not in ('', 'None', 'NA', 'na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {url}.\nURL cannot be blank.\nE.g.,\nmyemld.set_{node_target}(url="doi.org/1234567")'  
+            
+            assert style in CITATION_STYLES.keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {style} for `style`.\nYou must choose a citation `style` from the pick-list.\nCall `myemld.describe_citation()` to view the pick-list.'  
+            # `style` validated against src.pyEML.constants.CITATION_STYLES
+
+            # assemble variables
+            node_xpath = LOOKUPS['protocol_citation']['node_xpath']
+            node_target= LOOKUPS['protocol_citation']['node_target']
+            parent= LOOKUPS['protocol_citation']['parent']
+            values = LOOKUPS['protocol_citation']['values_dict']
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            dirty_vals = {}
+            if authors:
+                dirty_vals['authors'] = authors
+            if title:
+                dirty_vals['title'] = title
+            if date:
+                dirty_vals['date'] = newdate
+            if version:
+                dirty_vals['version'] = version
+            if doc_type:
+                dirty_vals['doc_type'] = doc_type
+            if url:
+                dirty_vals['url'] = url
+            
+            # clean varaibles
+            cleanvals = self._delete_none(dirty_vals) # delete empty nodes
+
+            # generate citation paragraph
+            values['para'] = self._make_citation(citation_parts=cleanvals, style=style) # make paragraph from `cleanvals` dict
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_protocol_citation()
+
+        except AssertionError as a:
+            print(a)
+        except ValueError as e:
+            print(e)
+            print('Dates must be in YYYY-MM-DD format.')
+        except:
+            print('problem set_protocol_citation()')
+
+    def delete_protocol_citation(self):
+        """Delete the dataset's protocol citation
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_protocol_citation()
+        """
+        try:
+            node_xpath = LOOKUPS['protocol_citation']['node_xpath']
+            node_target= LOOKUPS['protocol_citation']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_protocol_citation()') 
+    
     def make_nps(self):
         pass
     
     def _set_version(self):
         pass
 
+    def _make_citation(self, citation_parts:dict, style:str):
+        """Makes a citation paragraph from a dictionary of pieces
+
+        Args:
+            citation_parts (dict): A dictionary of citation pieces. E.g., author names, date, title.
+            style (str, optional): The style of citation to generate. E.g., 'chicago'. `style` validated against src.pyEML.constants.CITATION_STYLES
+        """
+        try:
+            if style == 'chicago':
+                citation = self._make_chicago(citation_parts=citation_parts)
+                return citation
+        except:
+            print('error _make_citation()')
+    
+    def _make_chicago(self, citation_parts:dict):
+        try:
+            new_citation_parts = {}
+            if 'authors' in citation_parts.keys():
+                author_list = []
+                for element in citation_parts['authors']:
+                    author = []
+                    if 'first' in element.keys():
+                        firstname = element['first'].capitalize()
+                        author.append(firstname)
+                    if 'middle' in element.keys():
+                        middleinitial = element['middle'][0].upper()
+                        middleinitial = middleinitial + '.'
+                        author.append(middleinitial)
+                    if 'last' in element.keys():
+                        lastname = element['last'].capitalize()
+                        author.append(lastname)
+                    author_list.append(author)
+                finalnames = []
+                for name in author_list:
+                    finalname = ' '.join(name)
+                    finalnames.append(finalname)
+                new_citation_parts['authors'] = ', '.join(finalnames)
+            if 'date' in citation_parts.keys():
+                citation_date = citation_parts.get('date').strftime("%Y")
+                new_citation_parts['date'] = citation_date
+            if 'title' in citation_parts.keys():
+                citation_title = citation_parts.get('title')
+                new_citation_parts['title'] = citation_title
+            if 'doc_type' in citation_parts.keys():
+                citation_doc_type = citation_parts.get('doc_type')
+                new_citation_parts['doc_type'] = citation_doc_type
+            if 'version' in citation_parts.keys():
+                citation_version = citation_parts.get('version')
+                new_citation_parts['version'] = f'Version {citation_version}'
+            if 'url' in citation_parts.keys():
+                citation_url = citation_parts.get('url')
+                new_citation_parts['url'] = f'version {citation_url}'
+            if 'etc' in citation_parts.keys():
+                citation_etc = citation_parts.get('etc')
+                new_citation_parts['etc'] = citation_etc
+            new_citation = '. '.join(map(str, new_citation_parts.values()))
+            return new_citation
+        except:
+            print('error _make_chicago()')
+    
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 
@@ -1309,26 +1550,29 @@ class Emld():
                 raise MissingNodeException(node_target)
             else:
                 if quiet == True:
-                    if len(node) == 1:
-                        for child in node:
-                            child.getparent().remove(child)
-                    else:
-                        for child in node:
-                            for elm in child:
-                                elm.getparent().remove(elm)
+                    for child in node:
+                        child.getparent().remove(child)
+                    # if len(node) == 1:
+                    #     for child in node:
+                    #         child.getparent().remove(child)
+                    # else:
+                    #     for child in node:
+                    #         for elm in child:
+                    #             elm.getparent().remove(elm)
                 else:
                     if len(node) == 1:
-                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nMetadata package contains a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node:')
                     if len(node) > 1:
-                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nMetadata package contains {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
                     counter = 1
                     for elm in node:
                         if len(node) <=1:
                             self._serialize(elm)
                         if len(node) >1:
-                            print(f'{counter}:')
+                            print(f'{counter}.')
                             self._serialize(elm)
                             counter += 1
+                            print('\n')
 
                     overwrite = input(f'{bcolors.BOLD}Do you want to delete these node(s)?\n{bcolors.ENDC}("{bcolors.BOLD}y{bcolors.ENDC}" to delete, "{bcolors.BOLD}n{bcolors.ENDC}" to cancel.)\n\n')
                     print(f'User input: {overwrite}')
@@ -1372,9 +1616,14 @@ class Emld():
                         for child in node:
                             self._serialize(child)
                     else:
+                        print(f'Metadata package contains {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes:')
+                        print('----------')
+                        counter=1
                         for child in node:
-                            for element in child:
-                                self._serialize(element)
+                            print(f'{counter}.')
+                            self._serialize(child)
+                            print('\n')
+                            counter += 1
                 else:
                     return node
         except MissingNodeException as e:

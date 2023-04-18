@@ -2,28 +2,121 @@ import src.pyEML.emld
 from importlib import reload
 reload(src.pyEML.emld)
 from src.pyEML.emld import Emld
+from datetime import datetime
 
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+myauthors = [
+    {
+        'first': 'albus',
+        'last': 'dumbledore'
+    },
+    {
+        'first': 'ronald',
+        'last': 'weasley'
+    }
+]
+myemld.set_protocol_citation(
+    authors=myauthors,
+    title='Pride and Prejudice',
+    version='1.0',
+    date='2021-01-01',
+    style='chicago'
+    )
 
+
+mydate = '2021-01-01'
+newdate = datetime.strptime(mydate, "%Y-%m-%d").date()
+print(newdate.strftime("%Y"))
+
+myemld.get_protocol_citation()
+myemld.delete_protocol_citation()
+myemld.get_keywords()
 myemld.get_usage_citation()
 myemld.delete_usage_citation()
 myemld.set_usage_citation(doi_url='myurl', title='mytitle', creator='mycreator', doi='mydoi', id='myid')
 
 
 
-
-
-
-
-
-
-
-myroot = myemld.root.findall('./additionalMetadata/metadata/emlEditor')
+myroot = myemld.root.findall('./dataset/additionalInfo/para')
+counter=1
 for elm in myroot:
-    for child in elm:
-        print(child.text)
+    print(f'{counter}.')
+    print(elm.text)
+    counter+=1
+
+myemld.describe_citation()
+myvals = {
+    'authors': [["JP", "Schmit"], ["GM", "Sanders"]]
+}
+
+
+new_citation_parts = {}
+if myvals["authors"]:
+    author_list = []
+    for element in myvals['authors']:
+        firstname = element[0].upper()
+        lastname = element[1].capitalize()
+        author = f'{lastname} {firstname}'
+        author_list.append(author)
+    new_citation_parts['authors'] = ', '.join(author_list)
+new_citation_parts
+
+
+
+
+myvals = {
+    'authors': [
+        {
+            'first': 'John',
+            'middle': 'Paul',
+            'last': 'Schmit'
+        },
+        {
+            'first': 'Elizabeth',
+            'last': 'Matthews'
+        }
+    ]
+}
+
+new_citation_parts = {}
+if myvals["authors"]:
+    author_list = []
+    for element in myvals['authors']:
+        print(element)
+        author = []
+        if 'first' in element.keys():
+            firstname = element['first'].capitalize()
+            author.append(firstname)
+        if 'middle' in element.keys():
+            middleinitial = element['middle'][0].upper()
+            middleinitial = middleinitial + '.'
+            author.append(middleinitial)
+        if 'last' in element.keys():
+            lastname = element['last'].capitalize()
+            author.append(lastname)
+        author_list.append(author)
+    finalnames = []
+    for name in author_list:
+        finalname = ' '.join(name)
+        finalnames.append(finalname)
+    end_result = ', '.join(finalnames)
+new_citation_parts['authors'] = end_result
+
+[['John', 'P.', 'Schmit'], ['Elizabeth', 'Matthews']]
+
+myname = [['John', 'P.', 'Schmit'], ['Elizabeth', 'Matthews']]
+finalnames = []
+for name in myname:
+    finalname = ' '.join(name)
+    finalnames.append(finalname)
+
+', '.join(finalnames)
+
+
+
+
 
 
 

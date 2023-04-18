@@ -160,6 +160,14 @@ LOOKUPS = {
                 'release': CURRENT_RELEASE
             }
         }
+    },
+    'protocol_citation': {
+        'node_xpath': './dataset/additionalInfo/para',
+        'node_target': 'protocol_citation',
+        'parent': './dataset/additionalInfo',
+        'values_dict': {
+            'para': None
+        }
     }
 }
 
