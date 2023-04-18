@@ -510,7 +510,8 @@ class Emld():
             parent= LOOKUPS['pub_date']['parent']
             values = LOOKUPS['pub_date']['values_dict']
             assert pub_date not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{pub_date}". `{node_target}` cannot be blank.'
-            
+            assert isinstance(pub_date, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(pub_date)}: {pub_date}.\Publication date must be of type str.\nE.g., myemld.set_pub_date(pub_date="2022-01-01") or myemld.set_pub_date(pub_date="Jan 2022")'
+
             values['pubDate'] = pub_date
             if self.interactive == True:
                 quiet=False
@@ -1029,7 +1030,6 @@ class Emld():
             assert len(doi) == 7, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{doi}" is an invalid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`.\n{bcolors.OKBLUE}Valid `{bcolors.BOLD}{node_target}{bcolors.ENDC}`{bcolors.OKBLUE} values are seven characters long. E.g., "1234567" or 1234567{bcolors.ENDC}.'
 
             values['alternateIdentifier'] = doi # doi
-            values['usageCitation']['alternateIdentifier'] = doi # drr_doi
             if self.interactive == True:
                 quiet=False
             else:
@@ -1161,6 +1161,101 @@ class Emld():
         except:
             print('error delete_contact()')
     
+    def get_usage_citation(self):
+        """Get the dataset's usage citation
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_usage_citation()
+        """
+        try:
+            node_xpath = LOOKUPS['usage_citation']['node_xpath']
+            node_target= LOOKUPS['usage_citation']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_usage_citation()')
+
+    def set_usage_citation(self, doi_url:str=None, title:str=None, creator:str=None, doi:str=None, id:str=None):
+        try:
+            node_xpath = LOOKUPS['usage_citation']['node_xpath']
+            node_target= LOOKUPS['usage_citation']['node_target']
+            parent= LOOKUPS['usage_citation']['parent']
+            dirty_vals = LOOKUPS['usage_citation']['values_dict']
+            
+            if doi_url not in (None, ''):
+                assert isinstance(doi_url, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(doi_url)}: {doi_url}.\nDOI (digital object identifier) url name must be of type str.\nE.g., myemld.set_{node_target}(doi_url="https://doi.org/10.36967/1234567")'
+                dirty_vals['usageCitation']['alternateIdentifier'] = doi_url
+            if title not in (None, ''):
+                assert isinstance(title, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(title)}: {title}.\nTitle name must be of type str.\nE.g., myemld.set_{node_target}(title="My dataset title")'
+                dirty_vals['usageCitation']['title'] = title
+            if creator not in (None, ''):
+                assert isinstance(creator, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(creator)}: {creator}.\nCreator name must be of type str.\nE.g., myemld.set_{node_target}(creator="Albus")'
+                dirty_vals['usageCitation']['creator'] = creator
+            if doi not in (None, ''):
+                assert isinstance(doi, (str, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(doi)}: {doi}.\doi must be of type str or int.\nE.g., myemld.set_{node_target}(doi="1234567") or myemld.set_{node_target}(doi=1234567)'
+                doi = str(doi)
+                dirty_vals['usageCitation']['report'] = doi
+            if id not in (None, ''):
+                assert isinstance(id, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(id)}: {id}.\ID must be of type str.\nE.g., myemld.set_{node_target}(id="associatedDRR")'
+                dirty_vals['usageCitation']['id'] = id
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            cleanvals = self._delete_none(dirty_vals)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_usage_citation()
+        except AssertionError as a:
+            print(a)
+        except:
+            print('error set_usage_citation()')
+        
+    def delete_usage_citation(self):
+        """Delete the dataset's usage citation
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_usage_citation()
+        """
+        try:
+            node_xpath = LOOKUPS['usage_citation']['node_xpath']
+            node_target= LOOKUPS['usage_citation']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error usage_citation()') 
+
+    def make_nps(self):
+        pass
+    
+    def _set_version(self):
+        pass
+
     def _serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 

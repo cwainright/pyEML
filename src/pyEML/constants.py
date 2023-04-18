@@ -1,5 +1,10 @@
 """Holds constants for Emld objects"""
 
+#: The current release version of {APP_NAME}
+CURRENT_RELEASE = '0.0.1'
+#: The name of this EML pipeline application
+APP_NAME = 'pyEML' # the name of the app; to be used in `pip install pyEML` or similar
+
 #: `LOOKUPS` holds abstracted EML-schema information that an `Emld`'s get, set, and delete methods needs.
 LOOKUPS = {
     'title': {
@@ -108,15 +113,12 @@ LOOKUPS = {
             }
         }
     },
-    'doi': {
+    'doi': { # the digital object identifier; https://www.doi.org/
         'node_xpath': './dataset/alternateIdentifier',
         'node_target': 'doi',
         'parent': './dataset',
         'values_dict': {
-            'alternateIdentifier': None,
-            'usageCitation': {
-                'alternateIdentifier': None
-            }
+            'alternateIdentifier': None
         }
     },
     'contact': {
@@ -131,6 +133,31 @@ LOOKUPS = {
             },
             'organizationName': None,
             'electronicMailAddress': None
+            }
+        }
+    },
+    'usage_citation': { # For NPS users, this is the NPS DataStore reference ID for the data release report (DRR); https://irma.nps.gov/DataStore/
+        'node_xpath': './dataset/usageCitation',
+        'node_target': 'usage_citation',
+        'parent': './dataset',
+        'values_dict': {
+            'usageCitation': {
+                'alternateIdentifier': None, # for NPS: 'https://doi.org/10.36967/' + './dataset/alternateIdentifier'
+                'title': None, # for NPS: DataStore DRR title
+                'creator': None, # for NPS: self.get_creator()
+                'report': None, # for NPS: './dataset/alternateIdentifier'
+                'id': None # for NPS: 'associatedDRR'
+            }
+        }
+    },
+    'version': {
+        'node_xpath': './additionalMetadata/metadata/emlEditor',
+        'node_target': 'version',
+        'parent': './additionalMetadata',
+        'values_dict': {
+            'emlEditor': {
+                'app': APP_NAME,
+                'release': CURRENT_RELEASE
             }
         }
     }
@@ -152,10 +179,6 @@ LICENSE_TEXT = {
     'restrict': 'This product has been determined to contain Controlled Unclassified Information (CUI) by the National Park Service, and is intended for internal use only. It is not published under an open license. Unauthorized access, use, and distribution are prohibited.'
     }
 
-#: The current release version of {APP_NAME}
-CURRENT_RELEASE = '0.0.1'
-#: The name of this EML pipeline application
-APP_NAME = 'pyEML' # the name of the app; to be used in `pip install pyEML` or similar
 #: `NPS_DOI_ADDRESS` is the National Park Service data package url prefix; to make a valid url, this must be suffixed with a valid DOI number
 NPS_DOI_ADDRESS = 'https://doi.org/10.57830/'
 #: `CITATION_STYLES` is pick list of citation styles into which `Emld` nodes can be deparsed; used in `make_citation()`.

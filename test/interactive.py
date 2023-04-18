@@ -7,9 +7,31 @@ filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/dat
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
 
+myemld.get_usage_citation()
+myemld.delete_usage_citation()
+myemld.set_usage_citation(doi_url='myurl', title='mytitle', creator='mycreator', doi='mydoi', id='myid')
+
+
+
+
+
+
+
+
+
+
+myroot = myemld.root.findall('./additionalMetadata/metadata/emlEditor')
+for elm in myroot:
+    for child in elm:
+        print(child.text)
+
+
+
+
 myemld.get_contact()
 myemld.delete_contact()
 myemld.set_contact(first='albus', last='dumbledore', org='hogwarts', email={'email':None})
+myemld.set_contact(first='albus', last='dumbledore', org='hogwarts', email='wellsey.r@hogwarts.edu')
 
 myemld.get_doi()
 myemld.delete_doi()
