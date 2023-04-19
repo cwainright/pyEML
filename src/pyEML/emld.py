@@ -184,19 +184,26 @@ class Emld():
             parent= LOOKUPS['creator']['parent']
             dirty_vals = LOOKUPS['creator']['values_dict']
             
+            entries = []
             if first not in (None, ''):
                 assert isinstance(first, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(first)}: {first}.\nFirst name must be of type str.\nE.g., myemld.set_creator(first="Albus")'
                 dirty_vals['creator']['individualName']['givenName'] = first
+                entries.append(True)
             if last not in (None, ''):
                 assert isinstance(last, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(last)}: {last}.\Last name must be of type str.\nE.g., myemld.set_creator(last="Fumblesnore")'
                 dirty_vals['creator']['individualName']['surName'] = last
+                entries.append(True)
             if org not in (None, ''):
                 assert isinstance(org, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(org)}: {org}.\Organization name must be of type str.\nE.g., myemld.set_creator(org="House Gryffinsnore")'
                 dirty_vals['creator']['organizationName'] = org
+                entries.append(True)
             if email not in (None, ''):
                 assert isinstance(email, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(email)}: {email}.\Email must be of type str.\nE.g., myemld.set_creator(email="wellsley.r@gryffinsnore.edu")'
                 dirty_vals['creator']['electronicMailAddress'] = email
+                entries.append(True)
 
+            assert any(entries), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided no values to set.'
+            
             if self.interactive == True:
                 quiet=False
             else:
@@ -1891,7 +1898,7 @@ class Emld():
         Examples:
             mycoverage = {
                 'area1': {
-                    'geographicDescription': 'A box around my sampling area',
+                    'geographicDescription': 'A box around sampling area1',
                     'boundingCoordinates': {
                         'westBoundingCoordinate': '-78.7348',
                         'eastBoundingCoordinate': '-76.758602',
@@ -1964,6 +1971,123 @@ class Emld():
             self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
         except:
             print('error delete_geographic_coverage()') 
+    
+    def get_metadata_provider(self):
+        """Get the dataset's metadata provider
+
+        This is usually the same person as the dataset creator. (i.e., myemld.get_creator())
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_metadata_provider()
+        """
+        try:
+            node_xpath = LOOKUPS['metadata_provider']['node_xpath']
+            node_target= LOOKUPS['metadata_provider']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_metadata_provider()')
+
+    def set_metadata_provider(self, first:str=None, last:str=None, org:str=None, email:str=None):
+        """Specify the metadata provider's name, organization, and email
+
+        Args:
+            first (str, optional): The dataset metadata provider's first name. Defaults to None.
+            last (str, optional): The dataset metadata provider's last name. Defaults to None.
+            org (str, optional): The dataset metadata provider's organization (e.g., company, government agency). Defaults to None.
+            email (str, optional): The dataset metadata provider's email address. Defaults to None.
+
+        Examples:
+            myemld.set_metadata_provider(first='Albus', last='Fumblesnore')
+        """
+        try:
+            node_xpath = LOOKUPS['metadata_provider']['node_xpath']
+            node_target= LOOKUPS['metadata_provider']['node_target']
+            parent= LOOKUPS['metadata_provider']['parent']
+            dirty_vals = LOOKUPS['metadata_provider']['values_dict']
+            
+            entries = []
+            if first not in (None, ''):
+                assert isinstance(first, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(first)}: {first}.\nFirst name must be of type str.\nE.g., myemld.set_metadata_provider(first="Albus")'
+                dirty_vals['metadataProvider']['individualName']['givenName'] = first
+                entries.append(True)
+            if last not in (None, ''):
+                assert isinstance(last, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(last)}: {last}.\Last name must be of type str.\nE.g., myemld.set_metadata_provider(last="Fumblesnore")'
+                dirty_vals['metadataProvider']['individualName']['surName'] = last
+                entries.append(True)
+            if org not in (None, ''):
+                assert isinstance(org, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(org)}: {org}.\Organization name must be of type str.\nE.g., myemld.set_metadata_provider(org="House Gryffinsnore")'
+                dirty_vals['metadataProvider']['organizationName'] = org
+                entries.append(True)
+            if email not in (None, ''):
+                assert isinstance(email, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(email)}: {email}.\Email must be of type str.\nE.g., myemld.set_metadata_provider(email="wellsley.r@gryffinsnore.edu")'
+                dirty_vals['metadataProvider']['electronicMailAddress'] = email
+                entries.append(True)
+
+            assert any(entries), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided no values to set.'
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            cleanvals = self._delete_none(dirty_vals)
+            self._set_node(values=cleanvals, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_metadata_provider()
+            
+        except AssertionError as a:
+            print(a)
+        except:
+            print('error set_metadata_provider()')
+
+    def delete_metadata_provider(self):
+        """Delete the dataset's metadata provider
+
+        This is usually the same person as the dataset creator. (i.e., myemld.get_creator())
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_metadata_provider()
+        """
+        try:
+            node_xpath = LOOKUPS['metadata_provider']['node_xpath']
+            node_target= LOOKUPS['metadata_provider']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_metadata_provider()') 
+    
+    def get_nps_producing_units(self):
+        self.get_metadata_provider()
+    
+    def set_nps_producing_units(self, *units:str):
+        pass
+    
+    def delete_nps_producing_units(self):
+        self.delete_metadata_provider()
     
     def describe_attributes(self):
         """Print the xml attribute pick-list

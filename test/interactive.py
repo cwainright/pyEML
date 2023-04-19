@@ -7,6 +7,26 @@ from datetime import datetime
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+myemld.get_metadata_provider()
+myemld.delete_metadata_provider()
+myemld.set_metadata_provider(first='albus', last='dumbledore')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 myemld.get_geographic_coverage()
 myemld.delete_geographic_coverage()
 
@@ -22,7 +42,7 @@ mycoverage = {
     }
 }
 myemld.set_geographic_coverage(coverage=mycoverage)
-
+myemld.set_nps_geographic_coverage('GLAC', 'ACAD')
 
 
 

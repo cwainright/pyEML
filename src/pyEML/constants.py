@@ -208,6 +208,29 @@ LOOKUPS = {
         'values_dict': {
                 'geographicCoverage': None
         }
+    },
+    'metadata_provider': {
+        'node_xpath': './dataset/metadataProvider',
+        'node_target': 'metadata_provider',
+        'parent': './dataset',
+        'values_dict': {
+            'metadataProvider': {
+                'individualName': {
+                'givenName': None,
+                'surName': None
+            },
+            'organizationName': None,
+            'electronicMailAddress': None
+            }
+        }
+    },
+    'nps_producing_units': {
+        'node_xpath': './dataset/metadataProvider',
+        'node_target': 'metadata_provider',
+        'parent': './dataset',
+        'values_dict': {
+            'metadataProvider': None
+        }
     }
 }
 
