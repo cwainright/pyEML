@@ -15,7 +15,7 @@ import lxml.etree as etree
 from src.pyEML.error_classes import bcolors, MissingNodeException, InvalidDataStructure
 from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES, AVAILABLE_ATTRIBUTES
 from datetime import datetime
-import json
+import iso639
 
 class Emld():
     """An object that holds data parsed from an EML-formatted xml file."""
@@ -1718,6 +1718,95 @@ class Emld():
             self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
         except:
             print('error delete_lit_cited()') 
+    
+    def get_language(self):
+        """Get the dataset's language
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_language()
+        """
+        try:
+            node_xpath = LOOKUPS['language']['node_xpath']
+            node_target= LOOKUPS['language']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_language()')
+
+    def set_language(self, language:str):
+        """Set the dataset's language
+        
+        Args:
+            languge (str): The language that you want to assign to your dataset. Example: 'english' or 'spanish'
+
+        Examples:
+            myemld.set_language(language='english')
+            myemld.set_language(language='spanish')
+        """
+        try:
+            node_xpath = LOOKUPS['language']['node_xpath']
+            node_target= LOOKUPS['language']['node_target']
+            parent = LOOKUPS['language']['parent']
+            values = LOOKUPS['language']['values_dict']
+            assert language not in ('', None, 'NA', 'Na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{language}". `{node_target}` cannot be blank.'
+            assert isinstance(language, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(language)}: "{language}". `{node_target}` must be type str.'
+            assert len(language) >= 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{language}". {bcolors.BOLD}`{node_target}`{bcolors.ENDC} must be at least three characters.'
+
+             # API call to retrieve ISO 3-letter abbreviation for a language
+            language_obj = iso639.languages.get(name=language.title()) # api call
+            language_title = language_obj.part3 # parse api result
+            assert len(language_title) == 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}"{language}" was not found in the `{bcolors.BOLD}ISO 639-2 language database{bcolors.ENDC}`.\nExamples of valid languages: "english", "spanish".\nA full list of valid languages is at https://www.loc.gov/standards/iso639-2/php/code_list.php'
+
+            values['language'] = language_title
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_language()
+        
+        except AssertionError as a:
+            print(a)
+
+    def delete_language(self):
+        """Delete the dataset's language
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_language()
+        """
+        try:
+            node_xpath = LOOKUPS['language']['node_xpath']
+            node_target= LOOKUPS['language']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_language()') 
     
     def describe_attributes(self):
         """Print the xml attribute pick-list

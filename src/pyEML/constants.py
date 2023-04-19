@@ -188,6 +188,14 @@ LOOKUPS = {
                 'bibtex': None
             }
         }
+    },
+    'language': {
+        'node_xpath': './dataset/language',
+        'node_target': 'language',
+        'parent': './dataset',
+        'values_dict': {
+                'language': None
+        }
     }
 }
 
