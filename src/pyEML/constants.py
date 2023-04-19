@@ -226,10 +226,12 @@ LOOKUPS = {
     },
     'nps_producing_units': {
         'node_xpath': './dataset/metadataProvider',
-        'node_target': 'metadata_provider',
+        'node_target': 'nps_producing_units',
         'parent': './dataset',
         'values_dict': {
-            'metadataProvider': None
+            'metadataProvider': {
+                'unit': None
+            }
         }
     }
 }

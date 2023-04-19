@@ -1852,7 +1852,7 @@ class Emld():
         """Retrieve bounding box coordinates for NPS parks and assign coordinates as geographic coverage
 
         Args:
-            *unit_code (str, arbitrary argument): `set_nps_geographic_coverage()` accepts any number of comma-separated arguments. Each argument is one four-character USNPS park code. E.g., set_nps_geographic_coverage("GLAC", "ACAD")
+            *unit_codes (str, arbitrary argument): `set_nps_geographic_coverage()` accepts any number of comma-separated arguments. Each argument is one four-character USNPS park code. E.g., set_nps_geographic_coverage("GLAC", "ACAD")
 
         Examples:
             myemld.set_nps_geographic_coverage('GLAC', 'ACAD')
@@ -2081,13 +2081,91 @@ class Emld():
             print('error delete_metadata_provider()') 
     
     def get_nps_producing_units(self):
-        self.get_metadata_provider()
+        """Get park codes as metadata providers
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_nps_producing_units()
+        """
+        try:
+            node_xpath = LOOKUPS['nps_producing_units']['node_xpath']
+            node_target= LOOKUPS['nps_producing_units']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_nps_producing_units()')
     
-    def set_nps_producing_units(self, *units:str):
-        pass
+    def set_nps_producing_units(self, *unit_codes:str):
+        """Set park codes as metadata providers
+
+        Args:
+            *unit_codes (str, arbitrary argument): `set_nps_producing_units()` accepts any number of comma-separated arguments. Each argument is one four-character USNPS park code. E.g., set_nps_geographic_coverage("GLAC", "ACAD")
+
+        Examples:
+            myemld.set_nps_producing_units('GLAC', 'ACAD')
+        """
+        try:
+            for unit in unit_codes:
+                assert unit not in ('', None, 'NA', 'Na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{unit}". `{node_target}` cannot be blank.'
+                assert isinstance(unit, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit)}: "{unit}". `{node_target}` must be type str.'
+                assert len(unit) == 4, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{unit}". {bcolors.BOLD}`{node_target}`{bcolors.ENDC} must be four characters.\nE.g., "GLAC", "ACAD"'
+
+            node_xpath = LOOKUPS['nps_producing_units']['node_xpath']
+            node_target= LOOKUPS['nps_producing_units']['node_target']
+            parent= LOOKUPS['nps_producing_units']['parent']
+            values = LOOKUPS['nps_producing_units']['values_dict']
+
+            values['metadataProvider']['unit'] = unit_codes
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_nps_producing_units()
+
+
+        except AssertionError as a:
+            print(a)
     
     def delete_nps_producing_units(self):
-        self.delete_metadata_provider()
+        """Delete park codes as metadata providers
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_nps_producing_units()
+        """
+        try:
+            node_xpath = LOOKUPS['nps_producing_units']['node_xpath']
+            node_target= LOOKUPS['nps_producing_units']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_nps_producing_units()') 
     
     def describe_attributes(self):
         """Print the xml attribute pick-list
