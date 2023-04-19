@@ -1808,6 +1808,135 @@ class Emld():
         except:
             print('error delete_language()') 
     
+    def get_geographic_coverage(self):
+        """Get the dataset's geographic coverage
+
+        Args:
+            None
+        
+        Returns:
+            str: If pretty == True
+            lxml.etree.Element: If pretty == False
+
+        Examples:
+            myemld.get_geographic_coverage()
+        """
+        try:
+            node_xpath = LOOKUPS['geographic_coverage']['node_xpath']
+            node_target= LOOKUPS['geographic_coverage']['node_target']
+            if self.interactive == True:
+                pretty=True
+                quiet=False
+                self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+            else:
+                pretty=False
+                quiet=True
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=pretty, quiet=quiet)
+                if node: # only returns an object if pretty == False
+                    return node
+            
+        except:
+            print('problem get_geographic_coverage()')
+
+    def set_nps_geographic_coverage(self, *unit_codes:str):
+        """Retrieve bounding box coordinates for NPS parks and assign coordinates as geographic coverage
+
+        Args:
+            *unit_code (str, arbitrary argument): `set_nps_geographic_coverage()` accepts any number of comma-separated arguments. Each argument is one four-character USNPS park code. E.g., set_nps_geographic_coverage("GLAC", "ACAD")
+        """
+        try:
+            for unit in unit_codes:
+                assert unit not in ('', None, 'NA', 'Na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{unit}". `{node_target}` cannot be blank.'
+                assert isinstance(unit, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit)}: "{unit}". `{node_target}` must be type str.'
+                assert len(unit) == 4, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{unit}". {bcolors.BOLD}`{node_target}`{bcolors.ENDC} must be four characters.\nE.g., "GLAC", "ACAD"'
+        except AssertionError as a:
+            print(a)
+
+    def set_geographic_coverage(self, coverage:list):
+        """Set the dataset's geographic coverage
+
+        Args:
+            coverage (dict): A dict of dicts. Each interior dict key is a unique ID for a geographic coverage area.
+                Each interior dict contains the decimal degree bounding box coordinates and description for one geographic coverage area.
+                'geographicDescription' is type str. Individual 'boundingCoordinates' can be type str, int, or float.
+
+        Examples:
+            mycoverage = {
+                'area1': {
+                    'geographicDescription': 'A box around my sampling area',
+                    'boundingCoordinates': {
+                        'westBoundingCoordinate': '-78.7348',
+                        'eastBoundingCoordinate': '-76.758602',
+                        'northBoundingCoordinate': 39.6924,
+                        'southBoundingCoordinate': 38.545057
+                    }
+                }
+            }
+            
+            myemld.set_geographic_coverage(coverage=mycoverage)
+        """
+        try:
+            assert isinstance(coverage, dict), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(coverage)}: "{coverage}". `coverage` must be type dict.\nSee examples for details.'
+            for unit in coverage.values():
+                assert isinstance(unit, dict), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit)}: "{unit}". Each element in `coverage` must be type dict.\nSee examples for details.'
+                assert len(unit) == 2, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Element {unit} has keys {unit.keys()}. Each element in `coverage` must be type dict with two keys: "geographicDescription" and "boundingCoordinates".\nSee examples for details.'
+                assert 'geographicDescription' in unit.keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Element {unit} has keys {unit.keys()}. Each element in `coverage` must be type dict with two keys: "geographicDescription" and "boundingCoordinates".\nSee examples for details.'
+                assert 'boundingCoordinates' in unit.keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Element {unit} has keys {unit.keys()}. Each element in `coverage` must be type dict with two keys: "geographicDescription" and "boundingCoordinates".\nSee examples for details.'
+                assert isinstance(unit['geographicDescription'], str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit["geographicDescription"])}: "geographicDescription" must be type str.\nSee examples for details.'
+                assert isinstance(unit['boundingCoordinates'], dict), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit["boundingCoordinates"])}: "boundingCoordinates" must be type dict.\nSee examples for details.'
+                assert 'westBoundingCoordinate' in unit['boundingCoordinates'].keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Element {unit["boundingCoordinates"]} has keys {unit["boundingCoordinates"].keys()}. Each element in `boundingCoordinates` must be type dict with four keys: "westBoundingCoordinate", "eastBoundingCoordinate", "northBoundingCoordinate", and "southBoundingCoordinate".\nSee examples for details.'
+                assert 'eastBoundingCoordinate' in unit['boundingCoordinates'].keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Element {unit["boundingCoordinates"]} has keys {unit["boundingCoordinates"].keys()}. Each element in `boundingCoordinates` must be type dict with four keys: "westBoundingCoordinate", "eastBoundingCoordinate", "northBoundingCoordinate", and "southBoundingCoordinate".\nSee examples for details.'
+                assert 'northBoundingCoordinate' in unit['boundingCoordinates'].keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Element {unit["boundingCoordinates"]} has keys {unit["boundingCoordinates"].keys()}. Each element in `boundingCoordinates` must be type dict with four keys: "westBoundingCoordinate", "eastBoundingCoordinate", "northBoundingCoordinate", and "southBoundingCoordinate".\nSee examples for details.'
+                assert 'southBoundingCoordinate' in unit['boundingCoordinates'].keys(), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Element {unit["boundingCoordinates"]} has keys {unit["boundingCoordinates"].keys()}. Each element in `boundingCoordinates` must be type dict with four keys: "westBoundingCoordinate", "eastBoundingCoordinate", "northBoundingCoordinate", and "southBoundingCoordinate".\nSee examples for details.'
+                assert isinstance(unit['boundingCoordinates']['westBoundingCoordinate'], (str, float, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit["boundingCoordinates"]["westBoundingCoordinate"])}: "westBoundingCoordinate" must be type str, int, or float.\nSee examples for details.'
+                unit['boundingCoordinates']['westBoundingCoordinate'] = str(unit['boundingCoordinates']['westBoundingCoordinate'])
+                assert isinstance(unit['boundingCoordinates']['eastBoundingCoordinate'], (str, float, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit["boundingCoordinates"]["eastBoundingCoordinate"])}: "eastBoundingCoordinate" must be type str, int, or float.\nSee examples for details.'
+                unit['boundingCoordinates']['eastBoundingCoordinate'] = str(unit['boundingCoordinates']['eastBoundingCoordinate'])
+                assert isinstance(unit['boundingCoordinates']['northBoundingCoordinate'], (str, float, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit["boundingCoordinates"]["northBoundingCoordinate"])}: "northBoundingCoordinate" must be type str, int, or float.\nSee examples for details.'
+                unit['boundingCoordinates']['northBoundingCoordinate'] = str(unit['boundingCoordinates']['northBoundingCoordinate'])
+                assert isinstance(unit['boundingCoordinates']['southBoundingCoordinate'], (str, float, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit["boundingCoordinates"]["southBoundingCoordinate"])}: "southBoundingCoordinate" must be type str, int, or float.\nSee examples for details.'
+                unit['boundingCoordinates']['southBoundingCoordinate'] = str(unit['boundingCoordinates']['southBoundingCoordinate'])
+
+            node_xpath = LOOKUPS['geographic_coverage']['node_xpath']
+            node_target= LOOKUPS['geographic_coverage']['node_target']
+            parent= LOOKUPS['geographic_coverage']['parent']
+            values = LOOKUPS['geographic_coverage']['values_dict']
+            values['geographicCoverage'] = coverage
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_geographic_coverage()
+            
+        except AssertionError as a:
+            print(a)
+    
+    def delete_geographic_coverage(self):
+        """Delete the dataset's geographic coverage
+
+        Args:
+            None
+
+        Examples:
+            myemld.delete_geographic_coverage()
+        """
+        try:
+            node_xpath = LOOKUPS['geographic_coverage']['node_xpath']
+            node_target= LOOKUPS['geographic_coverage']['node_target']
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+            self._delete_node(node_xpath=node_xpath, node_target=node_target, quiet=quiet) 
+        except:
+            print('error delete_geographic_coverage()') 
+    
     def describe_attributes(self):
         """Print the xml attribute pick-list
 

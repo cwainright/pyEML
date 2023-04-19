@@ -6,6 +6,10 @@ CURRENT_RELEASE = '0.0.1'
 APP_NAME = 'pyEML' # the name of the app; to be used in `pip install pyEML` or similar
 
 #: `LOOKUPS` holds abstracted EML-schema information that an `Emld`'s get, set, and delete methods need.
+#: `node_xpath` is the xpath to the node that a `get` method retrieves, a `delete` method removes, and a `set` method assigns value(s) to
+#: `node_target` is a str used to generate f-strings in warning and error messages
+#: `parent` is the node to which a `set` method appends new values; used to validate that all required nodes upstream from `node_xpath` (i.e., parent nodes) exist
+#: `values_dict` is an empty dictionary that has the key-value (xml tag-text) structure for the node at `node_xpath`
 LOOKUPS = {
     'title': {
         'node_xpath': './dataset/title',
@@ -195,6 +199,14 @@ LOOKUPS = {
         'parent': './dataset',
         'values_dict': {
                 'language': None
+        }
+    },
+    'geographic_coverage': {
+        'node_xpath': './dataset/coverage/geographicCoverage',
+        'node_target': 'geographic_coverage',
+        'parent': './dataset/coverage',
+        'values_dict': {
+                'geographicCoverage': None
         }
     }
 }

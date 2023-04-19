@@ -7,6 +7,90 @@ from datetime import datetime
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+myemld.get_geographic_coverage()
+myemld.delete_geographic_coverage()
+
+
+
+
+
+
+
+
+
+
+
+
+mycoverage = {
+    'area1': {
+        'geographicDescription': 'A box around my sampling area',
+        'boundingCoordinates': {
+            'westBoundingCoordinate': '-78.7348',
+            'eastBoundingCoordinate': '-76.758602',
+            'northBoundingCoordinate': 39.6924,
+            'southBoundingCoordinate': 38.545057
+        }
+    }
+}
+myemld.set_geographic_coverage(coverage=mycoverage)
+
+
+
+
+
+
+
+
+
+
+
+myemld.get_language()
+myemld.delete_language()
+myemld.set_language(
+    language='spanish'
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 myemld.get_lit_cited()
 myemld.delete_lit_cited()
 mycitations = ['firsticitation', 'secondcitation']
