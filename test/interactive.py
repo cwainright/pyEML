@@ -2,11 +2,17 @@ import src.pyEML.emld
 from importlib import reload
 reload(src.pyEML.emld)
 from src.pyEML.emld import Emld
-from datetime import datetime
 
 filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/long_input.xml'
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
+myemld.get_file_info()
+
+
+myemld.get_nps_producing_units()
+myemld.delete_nps_producing_units()
+myemld.set_nps_producing_units('glac', 'acad')
+
 myemld.get_metadata_provider()
 myemld.delete_metadata_provider()
 myemld.set_metadata_provider(first='albus', last='dumbledore')
@@ -14,15 +20,7 @@ myemld.set_metadata_provider(first='albus', last='dumbledore')
 
 
 
-
-
-
-
-
-
-
-
-
+myemld.get_title()
 
 
 

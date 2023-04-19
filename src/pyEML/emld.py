@@ -19,6 +19,9 @@ import iso639
 import urllib
 import pandas as pd
 import xmltodict
+import gc
+import sys
+import json
 
 class Emld():
     """An object that holds data parsed from an EML-formatted xml file."""
@@ -2167,6 +2170,81 @@ class Emld():
         except:
             print('error delete_nps_producing_units()') 
     
+    def get_file_info(self):
+        try:
+            # define structure of final object
+            myfile = {
+                'title': None,
+                'abstract': None,
+                'size': None,
+                'begin_date': None,
+                'end_date': None
+            }
+
+            # assemble info to loop over
+            objs_to_get = {
+                'title': LOOKUPS['title'],
+                'abstract': LOOKUPS['abstract'],
+                'begin_date': LOOKUPS['temporal_coverage'],
+                'end_date': LOOKUPS['temporal_coverage']
+            }
+
+            # loop to extract each node
+            for k, v in objs_to_get.items():
+                if k == 'abstract':
+                    node_xpath = v['node_xpath'] + '/para'
+                elif k == 'begin_date':
+                    node_xpath = v['node_xpath'] + '/rangeOfDates/beginDate/calendarDate'
+                elif k == 'end_date':
+                    node_xpath = v['node_xpath'] + '/rangeOfDates/endDate/calendarDate'
+                else:
+                    node_xpath = v['node_xpath']
+                node_target = v['node_target']
+                node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=True)
+                if len(node) == 0:
+                    if self.interactive == True:
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset does not have a `{bcolors.BOLD}{node_target}{bcolors.ENDC}` node.\nCall `set_{node_target}` to assign a value to {node_target}.')
+                assert len(node) < 2, print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset has {len(node)} `{bcolors.BOLD}{node_target}{bcolors.ENDC}` nodes.\nCall `get_{node_target} for more information.')
+                myfile[k] = node[0]
+
+            
+            myfile['title'] = myfile['title'].text
+            myfile['abstract'] = myfile['abstract'].text
+            myfile['size'] = str(self._get_size()) + ' bytes'
+            myfile['begin_date'] = myfile['begin_date'].text
+            myfile['end_date'] = myfile['end_date'].text
+
+            if self.interactive == True:
+                print(json.dumps(myfile, indent=4))
+
+        except AssertionError as a:
+            print(a)
+        except:
+            print('error get_file_info()')
+    
+    def _get_size(self):
+        """Get the size of an `Emld` element tree
+
+        Returns:
+            int: The size, in bytes, of the `Emld` element tree
+
+        Examples:
+            myemld._get_size()
+        """
+        # adapted from: https://stackoverflow.com/questions/449560/how-do-i-determine-the-size-of-an-object-in-python
+        seen_ids = set()
+        size = 0
+        objects = [self.root]
+        while objects:
+            need_referents = []
+            for obj in objects:
+                if id(obj) not in seen_ids:
+                    seen_ids.add(id(obj))
+                    size += sys.getsizeof(obj)
+                    need_referents.append(obj)
+            objects = gc.get_referents(*need_referents)
+        return size
+
     def describe_attributes(self):
         """Print the xml attribute pick-list
 
@@ -2532,7 +2610,6 @@ class Emld():
             new_values[nodes_to_build[0]] = None
             self._rebuild_values(new_values=new_values, values=values, nodes_to_build=nodes_to_build[-nodes_to_build[0]])
 
-    
     def _parent_node_finder(self, _dict:dict, is_present:bool):
         """Find the most downstream parent node that exists in an element tree
 
@@ -2659,9 +2736,6 @@ class Emld():
             print('Your filename must end in the .xml file extension')
         else:
             self.tree.write(filename, pretty_print=True, xml_declaration=True, encoding='UTF-8')
-
-    def make_nps(self):
-        pass
 
 """Copyright (C) 2023 Charles Wainright, US National Park Service
 
