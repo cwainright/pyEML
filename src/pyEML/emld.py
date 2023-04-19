@@ -36,8 +36,6 @@ class Emld():
         
         Attributes:
             xml_src (str): Filepath and name for the source-xml that is parsed to an element tree.
-            nps (bool): Turns on NPS-specific data package requirements. True: NPS is the author of the xml. `_set_by_for_nps()` - does NOT execute if kwarg self.nps == False.
-                `_set_npspublisher()` - does NOT execute if kwarg self.nps == False.
             interactive (bool): Turns on status messages and overwrite detection. True is for interactive sessions. Show status messages, ask user for permission before overwriting.
                 False is for automated scripting. Silence status messages and write metadata verbatim as scripted.
             tree (lxml.etree._ElementTree): an lxml element tree containing data parsed from self.xmlstring.
@@ -53,6 +51,7 @@ class Emld():
             root = tree.getroot()
             self.tree = tree
             self.root = root
+            self._set_version()
 
         except:
             print('exception')
@@ -2308,8 +2307,111 @@ class Emld():
             print('API call failed')
     
     def _set_version(self):
-        pass
+        # 1. create a <emlEditor> node at self.emld['additionalMetadata']["metadata"]["emlEditor"]
+        # 2. assign value src.pyEML.constants.CURRENT_RELEASE to emlEditor.text
+        # 3. assign value src.pyEML.constants.APP_NAME to <emlEditor> attribute 'id'
+        node_xpath = LOOKUPS['version']['node_xpath']
+        parent = LOOKUPS['version']['parent']
+        values = LOOKUPS['version']['values_dict']
+        
+        app = values['emlEditor']['app']
 
+        self._append_node(values=values, node_xpath=node_xpath, parent=parent)
+        
+        node = self.root.findall(node_xpath)
+        mynode = node[len(node)-1]
+        mynode.set('id', app)
+
+        if self.interactive == True:
+            self._get_version()
+
+    def _get_version(self):
+        node_xpath = LOOKUPS['version']['node_xpath']
+        node = self.root.findall(node_xpath)
+
+        if self.interactive == True:
+            for elm in node:
+                self._serialize(node=elm)
+    
+    def _serialize(self, node:etree._Element, depth:int=0):
+        """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
+
+        Args:
+            node (lxml.etree._Element): The parent node at which you want to start your element-tree crawl
+            depth (int, optional): _description_. Defaults to 0.
+
+        Examples:
+            # crawl a single node
+            node = myemld.root.find('./dataset/creator') # returns one lxml.etree._Element
+            myemld._serialize(node)
+
+            # crawl multiple nodes
+            testroot = myemld.root.findall('./dataset') # returns a list of lxml.etree._Element
+            for node in testroot:
+                myemld._serialize(node)
+        """
+        if len(node) == 0:
+            if len(node.attrib) == 0:
+                print(f'<{node.tag}>')
+                print(f'    {node.text}')
+                print(f'</{node.tag}>')
+            else:
+                attrib_str = []
+                for k,v in node.attrib:
+                    attrib_str.append(f'{k}="{v}"')
+                if len(attrib_str) >1:
+                    att_final = ', '.join(attrib_str)
+                else:
+                    att_final = attrib_str[0]
+                print(f'<{node.tag} {att_final}>')
+                print(f'    {node.text}')
+                print(f'</{node.tag}>')
+        else:
+            spaces = depth * '    '
+            if len(node.attrib) == 0:
+                print(f'{spaces}<{node.tag}>')
+                for elm in node:
+                    if len(elm) == 0:
+                        print(f'{spaces}    <{elm.tag}>')
+                        print(f'{spaces}        {elm.text}')
+                        print(f'{spaces}    </{elm.tag}>')
+                    else:
+                        self._serialize(elm, depth+1)
+                print(f'{spaces}</{node.tag}>')
+            else:
+                attrib_str = []
+                myattrib = node.attrib
+                for k,v in node.attrib.items():
+                    attrib_str.append(f'{k}="{v}"')
+                if len(attrib_str) >1:
+                    att_final = ', '.join(attrib_str)
+                else:
+                    att_final = attrib_str[0]
+                print(f'{spaces}<{node.tag} {att_final}>')
+                for elm in node:
+                    if len(elm.attrib) == 0:
+                        if len(elm) == 0:
+                            print(f'{spaces}    <{elm.tag}>')
+                            print(f'{spaces}        {elm.text}')
+                            print(f'{spaces}    </{elm.tag}>')
+                        else:
+                            self._serialize(elm, depth+1)
+                    else:
+                        attrib_str = []
+                        for k,v in elm.attrib:
+                            attrib_str.append(f'{k}="{v}"')
+                        if len(attrib_str) >1:
+                            att_final = ', '.join(attrib_str)
+                        else:
+                            att_final = attrib_str[0]
+                        if len(elm) == 0:
+                            print(f'{spaces}    <{elm.tag} {att_final}>')
+                            print(f'{spaces}        {elm.text}')
+                            print(f'{spaces}    </{elm.tag}>')
+                        else:
+                            self._serialize(elm, depth+1)
+                print(f'{spaces}</{node.tag}>')
+    
     def _make_citation(self, citation_parts:dict, style:str):
         """Makes a citation paragraph from a dictionary of pieces
 
@@ -2370,7 +2472,7 @@ class Emld():
         except:
             print('error _make_chicago()')
     
-    def _serialize(self, node:etree._Element, depth:int=0):
+    def _old_serialize(self, node:etree._Element, depth:int=0):
         """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
 
         Args:
@@ -2722,6 +2824,44 @@ class Emld():
                             self._delete_none(v_i)
         
         return _dict
+    
+    def _append_node(self, values:dict, node_xpath:str, parent:str):
+        # if there's not a node at `node_target`, need to find crawl xpath to add missing nodes
+        node_list = self._find_parents(node_xpath=node_xpath)
+        node_check = {}
+        for element in node_list:
+            nodeset = self.root.findall(element)
+            if len(nodeset) == 0:
+                node_check[element]=False
+            else:
+                node_check[element]=True
+
+        # assert False in node_check.values(), 'Node deletion failed' # there must be at least one False in node_check or program will duplicate tags
+        
+        # make sure all required parent nodes exist
+        parent_node_xpath = self._parent_node_finder(_dict=node_check, is_present=True) # find parent node that exists to check against the parent node we need `parent`
+        parent_node = self.root.findall(parent_node_xpath)
+        assert len(parent_node) == 1, 'Returned multiple parent nodes. Ambiguous data structure.'
+        parent_node = self.root.findall(parent_node_xpath)[0]
+
+        if parent_node_xpath == parent: # if the parent node the program found is the parent node the program is expecting, proceed
+            self._serialize_nodes(_dict = values, target_node=parent_node)
+        elif parent_node_xpath == node_xpath:
+            parent_node = self.root.findall(parent)
+            assert len(parent_node) == 1, 'Returned multiple parent nodes. Ambiguous data structure.'
+            parent_node = parent_node[0]
+            self._serialize_nodes(_dict = values, target_node=parent_node)
+        else: # otherwise, build missing nodes
+            possible_nodes = node_check.copy()
+            del possible_nodes[node_xpath]
+            nodes_to_build = self._parent_node_finder(_dict=possible_nodes, is_present=False)
+            nodes_to_build = nodes_to_build.replace(parent_node_xpath, '')
+            nodes_to_build = nodes_to_build.split('/')
+            nodes_to_build = [x for x in nodes_to_build if x != '']
+            newvalues = {}
+            newvalues = self._rebuild_values(new_values=newvalues, values=values, nodes_to_build=nodes_to_build)
+            self._serialize_nodes(_dict = newvalues, target_node=parent_node)
+
     
     def write_eml(self, filename:str):
         """Write EML-formatted xml file

@@ -9,6 +9,83 @@ myemld = Emld(filepath=filename, INTERACTIVE=True)
 myemld.get_file_info()
 
 
+
+myemld.get_title()
+
+mytest = myemld.root.findall('./additionalMetadata/metadata/emlEditor')
+mytest=mytest[1]
+mytest.attrib
+
+
+myattrib = {'id': 'pyEML'}
+for k, v in myattrib.items():
+    print(k)
+    print(v)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 myemld.get_nps_producing_units()
 myemld.delete_nps_producing_units()
 myemld.set_nps_producing_units('glac', 'acad')

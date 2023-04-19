@@ -157,7 +157,7 @@ LOOKUPS = {
     'version': {
         'node_xpath': './additionalMetadata/metadata/emlEditor',
         'node_target': 'version',
-        'parent': './additionalMetadata',
+        'parent': './additionalMetadata/metadata',
         'values_dict': {
             'emlEditor': {
                 'app': APP_NAME,
