@@ -16,6 +16,9 @@ from src.pyEML.error_classes import bcolors, MissingNodeException, InvalidDataSt
 from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES, AVAILABLE_ATTRIBUTES
 from datetime import datetime
 import iso639
+import urllib
+import pandas as pd
+import xmltodict
 
 class Emld():
     """An object that holds data parsed from an EML-formatted xml file."""
@@ -1843,12 +1846,37 @@ class Emld():
 
         Args:
             *unit_code (str, arbitrary argument): `set_nps_geographic_coverage()` accepts any number of comma-separated arguments. Each argument is one four-character USNPS park code. E.g., set_nps_geographic_coverage("GLAC", "ACAD")
+
+        Examples:
+            myemld.set_nps_geographic_coverage('GLAC', 'ACAD')
         """
         try:
             for unit in unit_codes:
                 assert unit not in ('', None, 'NA', 'Na', 'NaN'), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{unit}". `{node_target}` cannot be blank.'
                 assert isinstance(unit, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(unit)}: "{unit}". `{node_target}` must be type str.'
                 assert len(unit) == 4, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{unit}". {bcolors.BOLD}`{node_target}`{bcolors.ENDC} must be four characters.\nE.g., "GLAC", "ACAD"'
+
+            # API call
+            geog_cov = self._content_units_api(unit_codes)
+
+            node_xpath = LOOKUPS['geographic_coverage']['node_xpath']
+            node_target= LOOKUPS['geographic_coverage']['node_target']
+            parent= LOOKUPS['geographic_coverage']['parent']
+            values = LOOKUPS['geographic_coverage']['values_dict']
+            values['geographicCoverage'] = geog_cov
+
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            self._set_node(values=values, node_target=node_target, node_xpath=node_xpath, parent=parent, quiet=quiet)
+
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}{node_target}{bcolors.ENDC}` updated.')
+                self.get_geographic_coverage()
+
+
         except AssertionError as a:
             print(a)
 
@@ -1872,7 +1900,7 @@ class Emld():
                     }
                 }
             }
-            
+
             myemld.set_geographic_coverage(coverage=mycoverage)
         """
         try:
@@ -1958,6 +1986,46 @@ class Emld():
 
     def make_nps(self):
         pass
+    
+    def _content_units_api(self, unit_codes:tuple):
+        try:
+            # An API call to NPS Rest Services to get
+            polygon_holder = dict() # decimal degrees of all polygon points for each `unit`
+            bbox_holder = dict() # bounding box (max & min lat & lon) for each `unit`
+            geog_cov = dict() # the bounding box(es) in the format that EML requires
+            for unit in unit_codes:
+                # loop over each `unit` in `unit_codes`
+                api_url = 'https://irmaservices.nps.gov/v2/rest/unit/' + str(unit) + '/geography'
+                if self.interactive == True:
+                    print(f'API call for {str(unit)}... {api_url}')
+                contents = urllib.request.urlopen(api_url).read()
+                contents = xmltodict.parse(urllib.request.urlopen(api_url).read())
+                contents = contents["ArrayOfUnitGeography"]["UnitGeography"]["Geography"]
+                contents = contents.replace(',', '').replace('\']', '').replace('[\'', '').replace('POLYGON ((', '').replace('))', '').split()
+                park_geom = pd.DataFrame()
+                park_geom["lat"] = contents[1::2] # Elements from list1 starting from 1 iterating by 2
+                park_geom["lon"] = contents[::2]
+                polygon_holder[unit] = park_geom
+                # split into decimal degree bounding box
+                bbox_holder[unit] = {
+                'N': max(polygon_holder[unit]["lat"]),
+                'E': min(polygon_holder[unit]["lon"]),
+                'S': min(polygon_holder[unit]["lat"]),
+                'W': max(polygon_holder[unit]["lon"])
+                }
+                # build EML geographic coverage dict for each unit
+                geog_cov[unit] = {
+                    'geographicDescription': 'NPS Content Unit Link: ' + unit,
+                    'boundingCoordinates': {
+                        'northBoundingCoordinate': bbox_holder[unit]["N"],
+                        'eastBoundingCoordinate': bbox_holder[unit]["E"],
+                        'southBoundingCoordinate': bbox_holder[unit]["S"],
+                        'westBoundingCoordinate': bbox_holder[unit]["W"]
+                    }
+                }
+            return geog_cov
+        except:
+            print('API call failed')
     
     def _set_version(self):
         pass

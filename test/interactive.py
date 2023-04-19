@@ -10,17 +10,6 @@ myemld = Emld(filepath=filename, INTERACTIVE=True)
 myemld.get_geographic_coverage()
 myemld.delete_geographic_coverage()
 
-
-
-
-
-
-
-
-
-
-
-
 mycoverage = {
     'area1': {
         'geographicDescription': 'A box around my sampling area',
