@@ -1,0 +1,84 @@
+---
+title: "Getting started with pyEML"
+subtitle: "An Ecological Metadata Language pipeline for python"
+date: 20 Apr 2023
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+# Introduction
+pyEML is a semi-automatic python package for creating and editing [Ecological Metadata Language](https://eml.ecoinformatics.org/) (EML) xml metadata. The development version of pyEML is available in [this repository](https://github.com/cwainright/pyEML).
+
+Despite python being popular in general programming and data science, R is the lingua franca in ecological data science. Given that preference, it's no surprise that R offers a robust tool stack for users to create  and edit EML through tools like [ropensci/EML](https://github.com/ropensci/EML), [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline), and [nationalparkservice/EMLeditor](https://github.com/nationalparkservice/EMLeditor). Currently, there is no similarly extensible python tool-stack for EML.
+
+[Metapype](https://github.com/PASTAplus/metapype-eml), the best EML tool for python, has two important shortcomings that make it incomparable to the R tool-stack. First, metapype cannot programmatically build an element tree from csvs of metadata, like [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline) can. Instead, metapype requires users to build EML node-by-node or write their own scripts to automate metapype method calls. Second, metapype is a scripting tool that adds hard-coded values to nodes, not a python-console tool with `get` and `set` methods for a user to edit EML nodes (e.g, title, author). That design choice exposes most of metapype's underlying abstraction directly to the user. Metapype is, however, essentially a collection of class wrappers around [lxml](https://lxml.de/), the performant and feature-rich C-based python library that pyEML is also built on.
+
+# Justification for pyEML
+pyEML addresses [metapype](https://github.com/PASTAplus/metapype-eml)'s two main shortcomings, 1. inability to build element trees from source files and 2. too few get and set methods. pyEML's `Eml` class will be able to generate an element tree element tree from source files (or directly from databases) to output EML-compliant xml to make EML generation scale-able and reproducible. Like metapype, pyEML uses 'child' and 'parent' abstractions, but pyEML leaves abstractions under-the-hood and gives the user a collection of user-friendly node-level `get` and `set` methods. A fully-featured python EML tool will also stack well with numerous other technologies that already support python, like Esri tools, because python is ubiquitous outside of ecology.
+
+# Dependencies
+Dependencies for pyEML are detailed in [requirements.txt](https://github.com/cwainright/pyEML/blob/main/requirements.txt).
+
+Use `pip install -r requirements.txt` to install pyEML's dependencies in your python project environment.
+
+# Workflow outline
+When complete, pyEML will have two classes for building and editing EML: `Eml` and `Emld`.
+* `Eml` builds an element tree from source files
+* `Emld` builds an element tree from xml
+
+As of 20 Apr 2023, the `Emld` class is available for demonstration and the `Eml` class is not. Eventually, `Eml` will be `Emld`'s parent class. The two classes will share the same feature-methods (e.g., `get` and `set`) but will have different `__init__()` methods so users can build pyEML objects from source csvs (`Eml`) or xml files (`Emld`).
+
+1. Create EML xml. Here are two options:
+  a. [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline)
+  b. [ezEML](https://ezeml.edirepository.org/eml/)
+2. Create an `Emld` instance.
+3. Determine what changes you want to make to your EML. Two options:
+  a. Look over your EML as a whole
+    - Open your xml in a text editor
+    - use pyEML's serializer to print xml to python console. e.g.,
+      `myemld._serialize(myemld.root)`
+  b. Look at individual EML nodes
+    - use pyEML's `get` methods. e.g.,
+      `myemld.get_title()`
+      `myemld.get_author()`
+4. Use `get`, `set`, `delete` methods to edit EML.
+  * Documentation on all pyEML methods is available https://github.com/cwainright/pyEML.
+5. Write the updated EML back to xml
+
+# A minimal workflow
+
+## Clone the github repo
+Since pyEML is in development, to use the package, you will need to clone the github repo. Instructions for cloning a repo are [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+
+## Start an interactive workflow
+pyEML includes an example [interactive workflow](https://github.com/cwainright/pyEML/tree/main/test) called `test/interactive.py`. Alternatively, create your own `.py` file and import pyEML modules as shown in `test/interactive.py`.
+
+1. Create EML xml.
+pyEML includes [data/short_input.xml](https://github.com/cwainright/pyEML/tree/main/data) for demonstration purposes.
+
+Creating your own EML is outside the scope of a pyEML getting-started document but there are a handful of good non-python tools to generate EML. Use one of those tools to generate your own EML. Here are two options:
+  a. [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline) (an R package)
+  b. [ezEML](https://ezeml.edirepository.org/eml/) (a web-based GUI tool)
+
+2. Create an `Emld` instance.
+```{python}
+from src.pyEML.emld import Emld
+
+filename = 'data/short_input.xml'
+myemld = Emld(filepath=filename, INTERACTIVE=True)
+```
+
+Note: if `src.pyEML.emld` fails to import, you may need to move `interactive.py` to your project's root directory for `interactive.py` to find the `src.pyEML.emld` module. This seems to be a quirk of the project being an unconfigured PyPI package and the quirk will resolve itself once the package is configured for pip installation.
+
+3. Determine what changes you want to make to your EML.
+
+If your EML file is small, it may make sense to review your whole EML document in a text editor. Alternatively, you can use pyEML's built-in serializer to print your EML file to your console.
+```{python}
+myemld._serialize(myemld.root)
+```
+
+```{python}
+# Some functions from EMLeditor that will be critical to run include:
+# set_cui, set_doi, set_drr and set_content_units, set_producing_units (with more to come soon).
+```
