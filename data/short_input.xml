@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eml:eml xmlns:eml="https://eml.ecoinformatics.org/eml-2.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:stmml="http://www.xml-cml.org/schema/stmml-1.2" packageId="2022_NCRN_forest_vegetation_metadata" xsi:schemaLocation="https://eml.ecoinformatics.org/eml-2.2.0/eml.xsd https://eml.ecoinformatics.org/eml-2.2.0/eml.xsd" system="unknown">
+  <dataset>
+    <title>NCRN Forest Vegetation Monitoring Data 2006-2022</title>
+    <creator>
+      <individualName>
+        <givenName>David</givenName>
+        <surName>Jones</surName>
+      </individualName>
+      <organizationName>National Park Service</organizationName>
+      <electronicMailAddress>david_jones@nps.gov</electronicMailAddress>
+    </creator>
+    <pubDate>2022-12-21</pubDate>
+    <abstract>
+      <para>This dataset represents the forest vegetation monitoring from 2006-2022 collected by the National Capital Region Network (NCRN) Inventory and Monitoring Program. Data was collected from over 400 forest plots randomly scattered throughout the NCRN. Each of the plots was monitored a single time within a four-year return cycle. Data related to forest structure and plant community composition is reported for the region as a whole and each individual park. This data includes information about: Trees, Shrubs, Herbacious Vegetation, Vines, and Conditions including Pests and Diseases.</para>
+    </abstract>
+    <keywordSet>
+      <keyword>Application Inventory Registry</keyword>
+      <keyword>Coarse Woody Debris</keyword>
+      <keyword>CWD</keyword>
+      <keyword>Exotics</keyword>
+      <keyword>Foliage Conditions</keyword>
+      <keyword>Forest</keyword>
+      <keyword>Forest Ecology</keyword>
+      <keyword>Forest Monitor</keyword>
+      <keyword>Forest Pathogens</keyword>
+      <keyword>Forest Pests</keyword>
+      <keyword>Forest Vegetation</keyword>
+      <keyword>Herbaceous</keyword>
+      <keyword>Herbs</keyword>
+      <keyword>I&amp;M</keyword>
+      <keyword>IMD</keyword>
+      <keyword>Invasive Plants</keyword>
+      <keyword>Inventory and Monitoring Division</keyword>
+      <keyword>Monitoring</keyword>
+      <keyword>National Capital Area</keyword>
+      <keyword>National Capital Region</keyword>
+      <keyword>National Capital Region Network</keyword>
+      <keyword>National Park Service</keyword>
+      <keyword>NCA</keyword>
+      <keyword>NCR</keyword>
+      <keyword>NCRN</keyword>
+      <keyword>NPS</keyword>
+      <keyword>Plot Floor</keyword>
+      <keyword>Quadrat Conditions</keyword>
+      <keyword>Saplings</keyword>
+      <keyword>Seedlings</keyword>
+      <keyword>Shrub Seedlings</keyword>
+      <keyword>Shrubs</keyword>
+      <keyword>Stems</keyword>
+      <keyword>Tag History</keyword>
+      <keyword>Tree Sapling Conditions</keyword>
+      <keyword>Trees</keyword>
+      <keyword>Vegetation</keyword>
+      <keyword>Vines</keyword>
+    </keywordSet>
+    <additionalInfo>
+      <para>Schmit JP, Sanders GM, Lehman M, Paradis T, Matthews E. 2014. National Capital Region Network Long-Term Forest Vegetation Monitoring Protocol: Version 2.1 (March, 2014). Natural Resource Report. NPS/NCRN/NRR—2009/113. National Park Service. Fort Collins, Colorado&#13;
+https://irma.nps.gov/DataStore/Reference/Profile/2210263</para>
+      <para>NCRN Forest Vegetation Monitoring. 2006 (IRMA Project Reference)&#13;
+https://irma.nps.gov/DataStore/Reference/Profile/2170028</para>
+    </additionalInfo>
+    <intellectualRights>
+      <para>This data package is released to the "public domain" under Creative Commons CC0 1.0 "No Rights Reserved" (see: https://creativecommons.org/publicdomain/zero/1.0/). It is considered professional etiquette to provide attribution of the original work if this data package is shared in whole or by individual components. A generic citation is provided for this data package on the website https://portal.edirepository.org (herein "website") in the summary metadata page. Communication (and collaboration) with the creators of this data package is recommended to prevent duplicate research or publication. This data package (and its components) is made available "as is" and with no warranty of accuracy or fitness for use. The creators of this data package and the website shall not be liable for any damages resulting from misinterpretation or misuse of the data package or its components. Periodic updates of this data package may be available from the website.
+</para>
+    </intellectualRights>
+    <coverage>
+      <geographicCoverage>
+        <geographicDescription>NCRN Forest Vegetation Monitoring Extent</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-78.7348</westBoundingCoordinate>
+          <eastBoundingCoordinate>-76.758602</eastBoundingCoordinate>
+          <northBoundingCoordinate>39.6924</northBoundingCoordinate>
+          <southBoundingCoordinate>38.545057</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <temporalCoverage>
+        <rangeOfDates>
+          <beginDate>
+            <calendarDate>2006-06-27</calendarDate>
+          </beginDate>
+          <endDate>
+            <calendarDate>2022-09-22</calendarDate>
+          </endDate>
+        </rangeOfDates>
+      </temporalCoverage>
+      <taxonomicCoverage>
+        <taxonomicClassification>
+          <taxonRankName>kingdom</taxonRankName>
+          <taxonRankValue>Plantae</taxonRankValue>
+          <taxonId provider="https://gbif.org">6</taxonId>
+          <taxonomicClassification>
+            <taxonRankName>phylum</taxonRankName>
+            <taxonRankValue>Tracheophyta</taxonRankValue>
+            <taxonId provider="https://gbif.org">7707728</taxonId>
+            <taxonomicClassification>
+              <taxonRankName>class</taxonRankName>
+              <taxonRankValue>Magnoliopsida</taxonRankValue>
+              <taxonId provider="https://gbif.org">220</taxonId>
+              <taxonomicClassification>
+                <taxonRankName>order</taxonRankName>
+                <taxonRankValue>Rosales</taxonRankValue>
+                <taxonId provider="https://gbif.org">691</taxonId>
+                <taxonomicClassification>
+                  <taxonRankName>family</taxonRankName>
+                  <taxonRankValue>Rosaceae</taxonRankValue>
+                  <taxonId provider="https://gbif.org">5015</taxonId>
+                  <taxonomicClassification>
+                    <taxonRankName>genus</taxonRankName>
+                    <taxonRankValue>Pyrus</taxonRankValue>
+                    <taxonId provider="https://gbif.org">2986532</taxonId>
+                    <taxonomicClassification>
+                      <taxonRankName>species</taxonRankName>
+                      <taxonRankValue>Pyrus betulifolia</taxonRankValue>
+                      <taxonId provider="https://gbif.org">7653491</taxonId>
+                    </taxonomicClassification>
+                  </taxonomicClassification>
+                </taxonomicClassification>
+              </taxonomicClassification>
+            </taxonomicClassification>
+          </taxonomicClassification>
+        </taxonomicClassification>
+		</taxonomicCoverage>
+	</coverage>
+    <maintenance>
+      <description>complete</description>
+    </maintenance>
+    <contact>
+      <individualName>
+        <givenName>Elizabeth</givenName>
+        <surName>Matthews</surName>
+      </individualName>
+      <organizationName>National Park Service</organizationName>
+      <electronicMailAddress>elizabeth_matthews@nps.gov</electronicMailAddress>
+    </contact>
+    <methods>
+      <methodStep>
+        <description>
+          <para>Schmit JP, Sanders GM, Lehman M, Paradis T, Matthews E. 2014. National Capital Region Network Long-Term Forest Vegetation Monitoring Protocol: Version 2.1 (March, 2014). Natural Resource Report. NPS/NCRN/NRR—2009/113. National Park Service. Fort Collins, Colorado&#13;
+https://irma.nps.gov/DataStore/Reference/Profile/2210263</para>
+        </description>
+      </methodStep>
+    </methods>
+  </dataset>
+  <additionalMetadata>
+    <metadata>
+      <emlEditor>
+        <app>EMLassemblyline</app>
+        <release>3.5.5</release>
+      </emlEditor>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>
