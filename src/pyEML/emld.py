@@ -1205,19 +1205,19 @@ class Emld():
         except:
             print('problem get_usage_citation()')
 
-    def set_usage_citation(self, doi_url:str=None, title:str=None, creator:str=None, doi:str=None, id:str=None):
+    def set_usage_citation(self, alt_id:str=None, title:str=None, creator:str=None, report:str=None, id:str=None):
         """Set the dataset's usage citation
 
         Args:
-            doi_url (str, optional): The url to the dataset. E.g., https://doi.org/10.36967/1234567. Defaults to None.
-            title (str, optional): The title given to the dataset at `doi_url`. Defaults to None.
+            alt_id (str, optional): The url to the dataset. E.g., https://doi.org/10.36967/1234567. Defaults to None.
+            title (str, optional): The title given to the dataset at `alt_id`. Defaults to None.
             creator (str, optional): The metadata creator's name. Usually the same first and last name as `myemld.get_creator()`. Defaults to None.
-            doi (str, optional): Dataset's digital object identifier. Usually the same as `myemld.get_doi()`. Defaults to None.
+            report (str, optional): Dataset's digital object identifier. Usually the same as `myemld.get_doi()`. Defaults to None.
             id (str, optional): A unique identifier for the usage citation so it can be referenced as a unit from within the metadata package. Defaults to None.
 
         Examples:
-            myemld.set_usage_citation(doi_url='https://doi.org/10.36967/1234567', title='My data product', creator='Albus', doi='1234567', id='associatedDRR')
-            myemld.set_usage_citation(doi_url='https://doi.org/10.36967/1234567')
+            myemld.set_usage_citation(alt_id='https://doi.org/10.36967/1234567', title='My data product', creator='Albus', report='1234567', id='associatedDRR')
+            myemld.set_usage_citation(alt_id='https://doi.org/10.36967/1234567')
         """
         try:
             node_xpath = LOOKUPS['usage_citation']['node_xpath']
@@ -1225,19 +1225,19 @@ class Emld():
             parent= LOOKUPS['usage_citation']['parent']
             dirty_vals = LOOKUPS['usage_citation']['values_dict']
             
-            if doi_url not in (None, ''):
-                assert isinstance(doi_url, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(doi_url)}: {doi_url}.\nDOI (digital object identifier) url name must be of type str.\nE.g., myemld.set_{node_target}(doi_url="https://doi.org/10.36967/1234567")'
-                dirty_vals['usageCitation']['alternateIdentifier'] = doi_url
+            if alt_id not in (None, ''):
+                assert isinstance(alt_id, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(alt_id)}: {alt_id}.\nDOI (digital object identifier) url name must be of type str.\nE.g., myemld.set_{node_target}(alt_id="https://doi.org/10.36967/1234567")'
+                dirty_vals['usageCitation']['alternateIdentifier'] = alt_id
             if title not in (None, ''):
                 assert isinstance(title, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(title)}: {title}.\nTitle name must be of type str.\nE.g., myemld.set_{node_target}(title="My dataset title")'
                 dirty_vals['usageCitation']['title'] = title
             if creator not in (None, ''):
                 assert isinstance(creator, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(creator)}: {creator}.\nCreator name must be of type str.\nE.g., myemld.set_{node_target}(creator="Albus")'
                 dirty_vals['usageCitation']['creator'] = creator
-            if doi not in (None, ''):
-                assert isinstance(doi, (str, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(doi)}: {doi}.\doi must be of type str or int.\nE.g., myemld.set_{node_target}(doi="1234567") or myemld.set_{node_target}(doi=1234567)'
-                doi = str(doi)
-                dirty_vals['usageCitation']['report'] = doi
+            if report not in (None, ''):
+                assert isinstance(report, (str, int)), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(report)}: {report}.\nReport must be of type str or int.\nE.g., myemld.set_{node_target}(report="1234567") or myemld.set_{node_target}(report=1234567)'
+                report = str(report)
+                dirty_vals['usageCitation']['report'] = report
             if id not in (None, ''):
                 assert isinstance(id, str), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided {type(id)}: {id}.\ID must be of type str.\nE.g., myemld.set_{node_target}(id="associatedDRR")'
                 dirty_vals['usageCitation']['id'] = id
@@ -2264,8 +2264,86 @@ class Emld():
             print('error describe_attributes()')
 
     def make_nps(self):
-        pass
-    
+        
+        # change usage_citation['usageCitation']['alternateIdentifier'] to 'associatedDRR'
+        
+        try:
+            if self.interactive == True:
+                quiet=False
+            else:
+                quiet=True
+
+            updated_fields = {}
+            missing_fields = []
+            
+            node_xpath = LOOKUPS['usage_citation']['node_xpath']
+            node_target= LOOKUPS['usage_citation']['node_target']
+            values = LOOKUPS['usage_citation']['values_dict']
+            node = self._get_node(node_xpath=node_xpath, node_target=node_target, pretty=False, quiet=True)
+            if node is not None and len(node) == 1:
+                node = node[0]
+                for child in node:
+                    # change dataset['alternateIdentifier'] from {doi} to f'DRR: https://doi.org/10.36967/{doi}'
+                    if child.tag == 'alternateIdentifier':
+                        old = child.text
+                        values['usageCitation']['alternateIdentifier'] = f'DRR: {old}' # doi
+                        updated_fields['alternateIdentifier'] = {
+                            'old': old,
+                            'new': values['usageCitation']['alternateIdentifier']
+                        }
+                        child.text = values['usageCitation']['alternateIdentifier']
+                    # change dataset['usageCitation']['id'] to 'associatedDRR'
+                    if child.tag == 'id':
+                        old = child.text
+                        values['usageCitation']['id'] = 'associatedDRR'
+                        updated_fields['id'] = {
+                            'old': old,
+                            'new': values['usageCitation']['id']
+                        }
+                        child.text = values['usageCitation']['id']
+                    # change usage_citation['usageCitation']['report'] to {doi}
+                    if child.tag == 'report':
+                        old = child.text
+                        values['usageCitation']['report'] = 'associatedDRR'
+                        updated_fields['report'] = {
+                            'old': old,
+                            'new': values['usageCitation']['report']
+                        }
+                        child.text = values['usageCitation']['report']
+
+                if 'alternateIdentifier' not in updated_fields.keys():
+                    missing_fields.append('alternateIdentifier')
+                if 'id' not in updated_fields.keys():
+                    missing_fields.append('id')
+                if 'report' not in updated_fields.keys():
+                    missing_fields.append('report')
+                
+            else:
+                missing_fields.append(f'{node_target}/alternateIdentifier')
+                missing_fields.append(f'{node_target}/report')
+                missing_fields.append(f'{node_target}/id')
+
+            if self.interactive == True:
+                if len(updated_fields) == 0:
+                    print(f'\n{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Your dataset is missing all required fields to comply with NPS spec:')
+                    for field in missing_fields:
+                        print(f'`{bcolors.BOLD}{field}{bcolors.ENDC}` resolve with `{bcolors.BOLD}myemld.set_{node_target}(){bcolors.ENDC}`')
+                else:
+                    print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!{bcolors.ENDC}\n\nThe following fields were updated to NPS spec:{bcolors.ENDC}\n')
+                    for k, v in updated_fields.items():
+                        print(f'`{bcolors.BOLD}{k}{bcolors.ENDC}`:')
+                        print(f'{bcolors.BOLD}{json.dumps(v, indent=4)}{bcolors.ENDC}')
+                    if len(missing_fields) > 0:
+                        print(f'{bcolors.WARNING + bcolors.BOLD + bcolors.UNDERLINE}Warning!{bcolors.ENDC}\nYour dataset is missing some fields to be fully in-line with NPS spec:')
+                        for field in missing_fields:
+                            if field == 'alternateIdentifier':
+                                print(f'`{bcolors.BOLD}{field}{bcolors.ENDC}` resolve with `{bcolors.BOLD}myemld.set_{node_target}(alt_id=){bcolors.ENDC}`')
+                            else:
+                                print(f'`{bcolors.BOLD}{field}{bcolors.ENDC}` resolve with `{bcolors.BOLD}myemld.set_{node_target}({field}=){bcolors.ENDC}`')
+                    
+        except:
+            print('error_make_nps()')
+        
     def _content_units_api(self, unit_codes:tuple):
         try:
             # An API call to NPS Rest Services to get
@@ -2322,8 +2400,8 @@ class Emld():
         mynode = node[len(node)-1]
         mynode.set('id', app)
 
-        if self.interactive == True:
-            self._get_version()
+        # if self.interactive == True:
+        #     self._get_version()
 
     def _get_version(self):
         node_xpath = LOOKUPS['version']['node_xpath']
@@ -2334,7 +2412,7 @@ class Emld():
                 self._serialize(node=elm)
     
     def _serialize(self, node:etree._Element, depth:int=0):
-        """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags and text to console
+        """Starts at a given node, crawls all of its sub-nodes, pretty-prints tags, attributes, and text to console
 
         Args:
             node (lxml.etree._Element): The parent node at which you want to start your element-tree crawl
@@ -2360,7 +2438,7 @@ class Emld():
                 for k,v in node.attrib:
                     attrib_str.append(f'{k}="{v}"')
                 if len(attrib_str) >1:
-                    att_final = ', '.join(attrib_str)
+                    att_final = ' '.join(attrib_str)
                 else:
                     att_final = attrib_str[0]
                 print(f'<{node.tag} {att_final}>')
@@ -2380,11 +2458,10 @@ class Emld():
                 print(f'{spaces}</{node.tag}>')
             else:
                 attrib_str = []
-                myattrib = node.attrib
                 for k,v in node.attrib.items():
                     attrib_str.append(f'{k}="{v}"')
                 if len(attrib_str) >1:
-                    att_final = ', '.join(attrib_str)
+                    att_final = ' '.join(attrib_str)
                 else:
                     att_final = attrib_str[0]
                 print(f'{spaces}<{node.tag} {att_final}>')
@@ -2401,7 +2478,7 @@ class Emld():
                         for k,v in elm.attrib:
                             attrib_str.append(f'{k}="{v}"')
                         if len(attrib_str) >1:
-                            att_final = ', '.join(attrib_str)
+                            att_final = ' '.join(attrib_str)
                         else:
                             att_final = attrib_str[0]
                         if len(elm) == 0:

@@ -7,8 +7,8 @@ filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/dat
 # filename = 'C:/Users/cwainright/OneDrive - DOI/Documents/data_projects/pyEML/data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
 myemld.get_file_info()
-
-
+myemld.get_usage_citation()
+myemld.set_usage_citation()
 
 myemld.get_title()
 
