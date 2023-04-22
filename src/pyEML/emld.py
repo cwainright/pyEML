@@ -26,13 +26,13 @@ import json
 class Emld():
     """An object that holds data parsed from an EML-formatted xml file."""
 
-    def __init__(self, filepath:str, INTERACTIVE:bool=False):
+    def __init__(self, filepath:str, INTERACTIVE:bool=True):
         """Constructor for class Emld
         
         Args:
             filepath (str): Filepath and name for the source-xml that is parsed to an element tree.
             INTERACTIVE (bool): Turns on status messages and overwrite detection. True is for interactive sessions. Shows status messages, asks user for permission before overwriting.
-                False is for automated scripting. Silences status messages and writes metadata verbatim as scripted.
+                False is for automated scripting. Silences status messages and writes metadata verbatim as scripted. Default is True.
         
         Attributes:
             xml_src (str): Filepath and name for the source-xml that is parsed to an element tree.
@@ -42,6 +42,7 @@ class Emld():
             root (lxml.etree._Element): the root node of self.tree.
         """
         try:
+            assert filepath.endswith('.xml'), print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.{bcolors.ENDC}\nYou provided "{bcolors.BOLD}{filepath}{bcolors.ENDC}".\nYou must create an`{bcolors.BOLD}Emld{bcolors.ENDC}` from an xml document.\nFilename should end in "{bcolors.BOLD}.xml{bcolors.ENDC}".')
             self.xml_src = filepath
             self.interactive = INTERACTIVE
             
@@ -53,8 +54,17 @@ class Emld():
             self.root = root
             self._set_version()
 
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}Emld{bcolors.ENDC}` created and interactive session started.')
+
+        except TypeError as t:
+            print(t)
+        except ValueError as v:
+            print(v)
+        except AssertionError as a:
+            print(a)
         except:
-            print('exception')
+            print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\n{bcolors.BOLD}`Emld`{bcolors.ENDC} not created.')
 
     def get_title(self):
         """Get the dataset's title 
@@ -2264,15 +2274,15 @@ class Emld():
             print('error describe_attributes()')
 
     def make_nps(self):
-        
-        # change usage_citation['usageCitation']['alternateIdentifier'] to 'associatedDRR'
-        
-        try:
-            if self.interactive == True:
-                quiet=False
-            else:
-                quiet=True
+        """Update EML fields to match NPS spec
 
+        Args:
+            None
+
+        Examples:
+            myemld.make_nps()
+        """
+        try:
             updated_fields = {}
             missing_fields = []
             
@@ -2325,9 +2335,13 @@ class Emld():
 
             if self.interactive == True:
                 if len(updated_fields) == 0:
-                    print(f'\n{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Your dataset is missing all required fields to comply with NPS spec:')
-                    for field in missing_fields:
-                        print(f'`{bcolors.BOLD}{field}{bcolors.ENDC}` resolve with `{bcolors.BOLD}myemld.set_{node_target}(){bcolors.ENDC}`')
+                    if len(node) > 1:
+                        print(f'\n{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Your dataset has {len(node)} usage citations.')
+                        print('Use `get_usage_citation()` and `set_usage_citation()` to resolve this problem.')
+                    else:
+                        print(f'\n{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}Your dataset is missing all required fields to comply with NPS spec:')
+                        for field in missing_fields:
+                            print(f'`{bcolors.BOLD}{field}{bcolors.ENDC}` resolve with `{bcolors.BOLD}myemld.set_{node_target}(){bcolors.ENDC}`')
                 else:
                     print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!{bcolors.ENDC}\n\nThe following fields were updated to NPS spec:{bcolors.ENDC}\n')
                     for k, v in updated_fields.items():
@@ -2939,6 +2953,40 @@ class Emld():
             newvalues = self._rebuild_values(new_values=newvalues, values=values, nodes_to_build=nodes_to_build)
             self._serialize_nodes(_dict = newvalues, target_node=parent_node)
 
+    def show_overview(self, node_xpath:str=None):
+        """Pretty-print up to three levels of xml tags and text
+
+        This method pretty-prints to console the tag structure to a max depth of three levels of tags (depth = 0, 1, 2).
+        This shows a user their element tree structure without details like deeply-nested nodes, namespaces, and attributes.
+        `show_overview()` is good for simply checking an element tree's structure or confirming that a `set` or `delete` method worked.
+        If you want the full-detail of your element tree, use `_serialize()` or `save_xml()`.
+
+        Args:
+            node_xpath (str, optional): The xpath to the node you want to overview from. E.g. './dataset'. Defaults to None.
+        """
+        if self.interactive == True:
+            quiet = False
+        else:
+            quiet = True
+        
+        if node_xpath is None:
+            node = self.root
+        else:
+            node = self._get_node(node_xpath=node_xpath, node_target='na', pretty=False, quiet=quiet)
+        self.__show_overview(node=node, depth=0)
+    
+    def __show_overview(self, node:etree._Element, depth:int):
+        if depth < 2:
+            spaces = '    ' * depth
+            if depth == 0:
+                print(f'{spaces}<{node.tag}>')
+            if len(node.children) == 0:
+                print(f'{spaces}    {node.text}')
+            else:
+                for child in node.children:
+                    print(f'{spaces}    <{child.tag}>')
+                    self.__show_overview(child, depth+1)
+            print(f'{spaces}</{node.tag}>')
     
     def write_eml(self, filename:str):
         """Write EML-formatted xml file
@@ -2947,12 +2995,15 @@ class Emld():
             filename (str): the filename and filepath where you want to save your EML-formatted xml.
 
         Examples:
-            tree.write('test_output.xml', pretty_print=True)
+            myemld.write_eml(filename='test_output.xml')
         """
-        if not filename.endswith('.xml'):
-            print('Your filename must end in the .xml file extension')
-        else:
+        try:
+            assert filename.endswith('.xml'),  f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{filename}".\n`filename` must end in ".xml".'
+        
             self.tree.write(filename, pretty_print=True, xml_declaration=True, encoding='UTF-8')
+        
+        except AssertionError as a:
+            print(a)
 
 """Copyright (C) 2023 Charles Wainright, US National Park Service
 
