@@ -1,0 +1,67 @@
+---
+title: "Metapype and pyEML"
+subtitle: "An Ecological Metadata Language pipeline for python"
+date: 24 Apr 2023
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+
+# Introduction
+pyEML is a semi-automatic python package for creating and editing [Ecological Metadata Language](https://eml.ecoinformatics.org/) (EML) xml metadata. The development version of pyEML is available in [this repository](https://github.com/cwainright/pyEML).
+
+R is the lingua franca of ecological data science, so it's no surprise that R offers a robust tool stack for generating EML. R users can create EML node trees with [ropensci/EML](https://github.com/ropensci/EML), execute EML-generating routines with [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline), and edit node-level data with [nationalparkservice/EMLeditor](https://github.com/nationalparkservice/EMLeditor). There is no similarly extensible python tool-stack for EML.
+
+[Metapype](https://github.com/PASTAplus/metapype-eml), an excellent EML tool for python, is a framework for building EML node trees, like [ropensci/EML](https://github.com/ropensci/EML). Metapype is a strong foundation for other tools because metapype's [`Node`](https://github.com/PASTAplus/metapype-eml/blob/master/src/metapype/model/node.py) class is already integrated with the [rules](https://github.com/PASTAplus/metapype-eml/blob/master/src/metapype/eml/rules.json) defined in the [EML schema documentation](https://eml.ecoinformatics.org/schema/), which simplifies the creation of EML-compliant xml in python. Metapype does not, however, offer the additional features of the R tool-stack like building node trees from summary metadata, which is a powerful workflow in [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline), or granular `get` and `set` methods to edit EML nodes (e.g, title, author), like [nationalparkservice/EMLeditor](https://github.com/nationalparkservice/EMLeditor). Metapype's strengths make it a useful foundation upon which other tools can be stacked.
+
+# Justification for pyEML
+[pyEML](https://github.com/cwainright/pyEML) can be to [metapype](https://github.com/PASTAplus/metapype-eml) what [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline) and [nationalparkservice/EMLeditor](https://github.com/nationalparkservice/EMLeditor) are to [ropensci/EML](https://github.com/ropensci/EML). pyEML can be built on [metapype](https://github.com/PASTAplus/metapype-eml) with features to generate node trees from source files and a feedback-rich interface to edit nodes. pyEML's `Eml` class will programmatically build node trees from source files (like csvs of pre-digested metadata) or use metapype's IO methods to build node trees from xml or json files. Then, a user can create, read, update, and delete nodes with `Eml`'s interactive interface that calls `metapype` methods. In the future, the `Eml` class should also be able to build EML from an [EDD](https://www.epa.gov/sites/default/files/2016-01/documents/r2comprehensivemanual_sept2015.pdf)-formatted database. A fully-featured python EML tool-stack will also stack with other technologies that already support python but not R, like Esri tools.
+
+# NPS use-case
+1. Generate annual datasets for each monitoring protocol (e.g., forest vegetation, water quality, land birds)
+    - QA/QC, format
+2. Build EML metadata for datasets
+    - Use the R tool stack or ezEML
+3. Upload dataset and metadata as a "data package" to [NPS DataStore](https://irma.nps.gov/DataStore/)
+4. DataStore parses EML
+
+# Architecture overview
+```{mermaid}
+flowchart TD
+  A(EML-formatted xml<br><br>E.g., ezEML or EDIorg/EMLassemblyline) --> H[metapype_io.from_xml]
+  H --> C{pyEML.Eml<br><br>Attribute:Eml.eml<br>is metapype.Node:names.EML}
+  F(EDD database<br><br>E.g., sql view of metadata) --> I[sql, pandas/polars] --> C
+  G(Start from scratch) --> J[metapype.Node] --> C
+  B(Metadata source csvs<br><br>E.g., py script for Access db) --> K[sql, pandas/polars] --> C
+  L(JSON) --> M[metapype_io.from_json] --> C
+  C --> D(pyEML get method<br><br>Feedback:<br>1. Missing node<br>2. Multiple nodes/ambiguity)
+  D --> N[pyEML.constants<br><br>dict of parent and node xpaths] --> O[metapype.names]
+  O --> N
+  N --> D
+  D --> C
+  C --> P(pyEML set method<br><br>Feedback:<br>1. type-check<br>2.overwrite warnings)
+  P --> C
+  P --> D
+  D --> P
+  Q(pyEML delete method<br><br>Feedback:<br>1. overwrite warnings) --> D
+  C --> Q
+  Q --> C
+  D --> Q
+  C --> R(pyEML.validate) --> S(metapype.eml.validate.node:Eml.eml)
+  S --> T(pyEML.save_xml) --> U(metapype_io.to_xml) --> V(lxml.etree.fromstring) --> W(lxml.etree.ElementTree.write<br><br>enables xml_declaration and encoding)
+
+
+  style A fill:#f9f,stroke:#333,stroke-width:4px
+  style B fill:#f9f,stroke:#333,stroke-width:4px
+  style F fill:#f9f,stroke:#333,stroke-width:4px
+  style G fill:#f9f,stroke:#333,stroke-width:4px
+  style L fill:#f9f,stroke:#333,stroke-width:4px
+  style C fill:#060,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+  style D fill:#060,stroke:#333,stroke-width:4px,color:#fff
+  style P fill:#060,stroke:#333,stroke-width:4px,color:#fff
+  style Q fill:#060,stroke:#333,stroke-width:4px,color:#fff
+  style R fill:#060,stroke:#333,stroke-width:4px,color:#fff
+  style T fill:#060,stroke:#333,stroke-width:4px,color:#fff
+  style N fill:#060,stroke:#333,stroke-width:1px,color:#fff
+```
