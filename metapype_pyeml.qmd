@@ -28,40 +28,100 @@ R is the lingua franca of ecological data science, so it's no surprise that R of
 
 # Architecture overview
 ```{mermaid}
-flowchart TD
-  A(EML-formatted xml<br><br>E.g., ezEML or EDIorg/EMLassemblyline) --> H[metapype_io.from_xml]
-  H --> C{pyEML.Eml<br><br>Attribute:Eml.eml<br>is metapype.Node:names.EML}
-  F(EDD database<br><br>E.g., sql view of metadata) --> I[sql, pandas/polars] --> C
-  G(Start from scratch) --> J[metapype.Node] --> C
-  B(Metadata source csvs<br><br>E.g., py script for Access db) --> K[sql, pandas/polars] --> C
-  L(JSON) --> M[metapype_io.from_json] --> C
-  C --> D(pyEML get method<br><br>Feedback:<br>1. Missing node<br>2. Multiple nodes/ambiguity)
-  D --> N[pyEML.constants<br><br>dict of parent and node xpaths] --> O[metapype.names]
-  O --> N
-  N --> D
-  D --> C
-  C --> P(pyEML set method<br><br>Feedback:<br>1. type-check<br>2.overwrite warnings)
-  P --> C
-  P --> D
-  D --> P
-  Q(pyEML delete method<br><br>Feedback:<br>1. overwrite warnings) --> D
-  C --> Q
-  Q --> C
-  D --> Q
-  C --> R(pyEML.validate) --> S(metapype.eml.validate.node:Eml.eml)
-  S --> T(pyEML.save_xml) --> U(metapype_io.to_xml) --> V(lxml.etree.fromstring) --> W(lxml.etree.ElementTree.write<br><br>enables xml_declaration and encoding)
+flowchart TB
+    %% pyEML Inputs
+    S --> T
+    T --> U
+    U --> V
+    V --> W
+    R <--> S
+    Z <--> X
+
+    X <--> N
+    X <--> O
+    X <--> P
 
 
-  style A fill:#f9f,stroke:#333,stroke-width:4px
-  style B fill:#f9f,stroke:#333,stroke-width:4px
-  style F fill:#f9f,stroke:#333,stroke-width:4px
-  style G fill:#f9f,stroke:#333,stroke-width:4px
-  style L fill:#f9f,stroke:#333,stroke-width:4px
-  style C fill:#060,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
-  style D fill:#060,stroke:#333,stroke-width:4px,color:#fff
-  style P fill:#060,stroke:#333,stroke-width:4px,color:#fff
-  style Q fill:#060,stroke:#333,stroke-width:4px,color:#fff
-  style R fill:#060,stroke:#333,stroke-width:4px,color:#fff
-  style T fill:#060,stroke:#333,stroke-width:4px,color:#fff
-  style N fill:#060,stroke:#333,stroke-width:1px,color:#fff
+    X[pyEML.constants<br><br>dict of parent and node xpaths<br>lookup tables for CUI, reference styles, et al]
+    Z[metapype.names]
+    style X fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style Z fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+
+    CC(metapype.find_all_nodes_by_path)
+    AA(metapype.remove_child)
+    BB(metapype.delete_node_instance)
+
+
+    %% pyEML `Eml` class
+    C{pyEML.Eml<br><br>Attribute:Eml.eml<br>is metapype.Node:names.EML}
+
+    %% pyEML methods
+    N(pyEML get method<br><br>Feedback:<br>1. Missing node<br>2. Multiple nodes/ambiguity)
+    O(pyEML set method<br><br>Feedback:<br>1. type-check<br>2.overwrite warnings)
+    P(pyEML delete method<br><br>Feedback:<br>1. overwrite warnings)
+
+    subgraph Outputs
+    %% pyEML Outputs
+    R(pyEML.validate)
+    S(metapype.eml.validate.node:Eml.eml)
+    T(pyEML.save_xml)
+    U(metapype_io.to_xml)
+    V(lxml.etree.fromstring)
+    W(lxml.etree.ElementTree.write<br>enables xml_declaration and encoding)
+
+    style S fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style U fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style R fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style T fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style V fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+    style W fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+
+    
+    end
+    subgraph CRUD
+    CC <--> N
+    AA
+    BB <--> P
+    AA <--> P
+    N
+    O
+    P
+    N <--> P
+    
+
+    style CC fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style BB fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style AA fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style C fill:#060,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+    style N fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style O fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style P fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    end
+    subgraph Inputs
+    DD[ezEML or EDIorg/EMLassemblyline] --> A(EML-formatted xml) --> B[metapype_io.from_xml]
+    I[sql, pandas/polars] --> F(EDD database) --> J
+    G(Start from scratch) --> J[Iterate over input<br>metapype.Node<br>metapype.add_child] 
+    K[sql, pandas/polars] --> D(Metadata source csvs) --> J
+    L(JSON) --> M[metapype_io.from_json]
+    
+
+
+    style A fill:#f9f,stroke:#333,stroke-width:4px
+    style F fill:#f9f,stroke:#333,stroke-width:4px
+    style G fill:#f9f,stroke:#333,stroke-width:4px
+    style D fill:#f9f,stroke:#333,stroke-width:4px
+    style L fill:#f9f,stroke:#333,stroke-width:4px
+
+    style M fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style B fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style J fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+      
+    end
+
+    
+
+    CRUD <--> C
+    Inputs --> C
+    C --> Outputs
+
 ```
