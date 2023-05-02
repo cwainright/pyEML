@@ -1,2 +1,15 @@
-data
+data/long_input.xml
+data/sphinx.txt
+data/testing.py
+data/todo.txt
 test.py
+docs
+validator_test.py
+data/emlvp_test_data
+metapype_pyeml_files
+pyeml_getting_started_files
+data/eml.xsd
+src/pyEML/__pycache__
+docs/
+metapype_pyeml.html
+pyeml_getting_started.html
