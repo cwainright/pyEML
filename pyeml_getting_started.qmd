@@ -4,64 +4,60 @@ subtitle: "An Ecological Metadata Language pipeline for python"
 date: 20 Apr 2023
 format:
   html:
-    code-fold: true
+    code-fold: false
 jupyter: python3
 ---
 # Introduction
 pyEML is a semi-automatic python package for creating and editing [Ecological Metadata Language](https://eml.ecoinformatics.org/) (EML) xml metadata. The development version of pyEML is available in [this repository](https://github.com/cwainright/pyEML).
 
-R is the lingua franca of ecological data science, so it's no surprise that R offers a robust tool stack for generating EML. R users can create EML node trees with [ropensci/EML](https://github.com/ropensci/EML), execute EML-generating routines with [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline), and edit node-level data with [nationalparkservice/EMLeditor](https://github.com/nationalparkservice/EMLeditor). There is no similarly extensible python tool-stack for EML.
-
-[Metapype](https://github.com/PASTAplus/metapype-eml), an excellent EML tool for python, is a framework for building EML node trees, like [ropensci/EML](https://github.com/ropensci/EML). Metapype is a strong foundation for other tools because metapype's [`Node`](https://github.com/PASTAplus/metapype-eml/blob/master/src/metapype/model/node.py) class is already integrated with the [rules](https://github.com/PASTAplus/metapype-eml/blob/master/src/metapype/eml/rules.json) defined in the [EML schema documentation](https://eml.ecoinformatics.org/schema/). This integration simplifies the creation of EML-compliant xml in python. Metapype does not, however, offer the additional features of the R tool-stack like building node trees from summary metadata, which is a powerful workflow in [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline), or granular `get` and `set` methods to edit EML nodes (e.g, title, author), like [nationalparkservice/EMLeditor](https://github.com/nationalparkservice/EMLeditor). Metapype's strengths make it a useful foundation upon which other tools can be stacked.
-
-# Justification for pyEML
-[pyEML](https://github.com/cwainright/pyEML) can be to [metapype](https://github.com/PASTAplus/metapype-eml) what [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline) and [nationalparkservice/EMLeditor](https://github.com/nationalparkservice/EMLeditor) are to [ropensci/EML](https://github.com/ropensci/EML). pyEML can be built on [metapype](https://github.com/PASTAplus/metapype-eml) with features to generate node trees from source files and a feedback-rich interface to edit nodes. pyEML's `Eml` class will programmatically build node trees from source files (like csvs of pre-digested metadata) or use metapype's IO methods to build node trees from xml or json files. Then, a user can create, read, update, and delete nodes with `Eml`'s interactive interface that calls `metapype` methods. In the future, the `Eml` class should also be able to build EML from an [EDD](https://www.epa.gov/sites/default/files/2016-01/documents/r2comprehensivemanual_sept2015.pdf)-formatted database. A fully-featured python EML tool-stack will also stack with other technologies that already support python but not R, like Esri tools.
-
-# Dependencies
-Dependencies for pyEML are detailed in [requirements.txt](https://github.com/cwainright/pyEML/blob/main/requirements.txt).
-
-Use `pip install -r requirements.txt` to install pyEML's dependencies in your python project environment.
-
 # Workflow outline
-When complete, pyEML will have two classes for building and editing EML: `Eml` and `Emld`.
-* `Eml` builds an element tree from source files
-* `Emld` builds an element tree from xml
+The workflow for the development version of pyEML starts by instantiating a `pyEML.emld.Emld` object from an existing xml document. Then a user can interact with their EML via pyEML's interface before writing that EML back to xml.
 
-As of 20 Apr 2023, the `Emld` class is available for demonstration and the `Eml` class is not. Eventually, `Eml` will be `Emld`'s parent class. The two classes will share the same feature-methods (e.g., `get` and `set`) but will have different `__init__()` methods so users can build pyEML objects from source csvs (`Eml`) or xml files (`Emld`).
 
-1. Create EML xml. Here are two options:
-  a. [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline)
-  b. [ezEML](https://ezeml.edirepository.org/eml/)
-2. Create an `Emld` instance.
-3. Determine what changes you want to make to your EML. Two options:
-  a. Look over your EML as a whole
-    - Open your xml in a text editor
-    - use pyEML's serializer to print xml to python console. e.g.,
-      `myemld._serialize(myemld.root)`
-  b. Look at individual EML nodes
-    - use pyEML's `get` methods. e.g.,
-      `myemld.get_title()`
-      `myemld.get_author()`
-4. Use `get`, `set`, `delete` methods to edit EML.
-  * Documentation on all pyEML methods is available https://github.com/cwainright/pyEML.
-5. Write the updated EML back to xml
+```{mermaid}
+graph LR
 
-# A minimal workflow
+subgraph External
+  A{Start from an existing xml document}
 
-## Clone the github repo
-Since pyEML is in development, to use the package, you will need to clone the github repo. Instructions for cloning a repo are [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+end
+
+subgraph pyEML
+  B{Instantiate an `Emld`}
+  C(View EML)
+  D(Edit EML)
+  E(Write xml)
+end
+
+A --> B --> C --> D --> E
+D --> C
+
+style A fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+style B fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+style External fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+style pyEML fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+
+```
+
+# How to get started
+
+## Clone pyEML's github repo
+Since pyEML is not yet published to PyPi, you need to clone pyEML's github repo. Instructions for cloning a repo are [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+
+Dependencies for pyEML are detailed in the repo's [requirements.txt](https://github.com/cwainright/pyEML/blob/main/requirements.txt). Use `pip install -r requirements.txt` to install pyEML's dependencies in your python project environment.
 
 ## Start an interactive workflow
 pyEML includes an example [interactive workflow](https://github.com/cwainright/pyEML/tree/main/test) called `test/interactive.py`. Alternatively, create your own `.py` file and import pyEML modules as shown in `test/interactive.py`.
 
-1. Create EML xml.
-pyEML includes [data/short_input.xml](https://github.com/cwainright/pyEML/tree/main/data) for demonstration purposes.
+### 1. Create EML xml.
+pyEML includes a demo EML xml file called [data/short_input.xml](https://github.com/cwainright/pyEML/tree/main/data).
 
-Creating your own EML is outside the scope of a pyEML getting-started document but there are a handful of good non-python tools to generate EML. Use one of those tools to generate your own EML. Here are two options:
-  a. [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline) (an R package)
-  b. [ezEML](https://ezeml.edirepository.org/eml/) (a web-based GUI tool)
+If you want to use your own metadata, you can use one of the following tools to generate EML from scratch, and then write that EML to xml.  
+  a. [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline) (R package)  
+  b. [ezEML](https://ezeml.edirepository.org/eml/) (web-based GUI tool)  
+  c. [metapype](https://github.com/PASTAplus/metapype-eml) (python package)
 
-2. Create an `Emld` instance.
+### 2. Instantiate an `Emld`.
 ```{python}
 from src.pyEML.emld import Emld
 
@@ -69,16 +65,238 @@ filename = 'data/short_input.xml'
 myemld = Emld(filepath=filename, INTERACTIVE=True)
 ```
 
-Note: if `src.pyEML.emld` fails to import, you may need to move `interactive.py` to your project's root directory for `interactive.py` to find the `src.pyEML.emld` module. This seems to be a quirk of the project being an unconfigured PyPI package and the quirk will resolve itself once the package is configured for pip installation.
+[^1]: If `src.pyEML.emld` fails to import...
 
-3. Determine what changes you want to make to your EML.
+[^1]: If `src.pyEML.emld` fails to import, you may need to move `interactive.py` to your project's root directory for `interactive.py` to find the `src.pyEML.emld` module. This annoyance will resolve itself once the package `__init__.py` is configured for PyPi/pip installation.
 
-If your EML file is small, it may make sense to review your whole EML document in a text editor. Alternatively, you can use pyEML's built-in serializer to print your EML file to your console.
+### 3. Determine what changes to make to your EML.
+
+In rare cases, your EML file will be small enough (<500 lines) to review in a text editor or in your python console. In most cases, you'll want to review parts (i.e., nodes) of your EML. pyEML can print whole xml files or individual nodes to console:
 ```{python}
-myemld._serialize(myemld.root)
+# since `myemld.root` and all of `root`'s nodes are lxml `Element`s,
+# all lxml `Element` methods are available to you
+print(type(myemld.root))
 ```
 
+
 ```{python}
-# Some functions from EMLeditor that will be critical to run include:
-# set_cui, set_doi, set_drr and set_content_units, set_producing_units (with more to come soon).
+# `pyeml.emld.Emld._serialize()` prints any `Emld` node to console and is the basis of `pyeml.emld.Emld.get()` methods
+# myemld._serialize(myemld.root) # prints your whole xml to console; only helpful for short EML files
+
+# if you like xpath syntax:
+my_additional_metadata = myemld.root.findall('./additionalMetadata') # from lxml; search for node(s) by xpath; https://lxml.de/tutorial.html
+for node in my_additional_metadata:
+  myemld._serialize(node) # prints all 'additionalMetadata' nodes to console; there is no print-to-console method in lxml
 ```
+
+pyEML has `get()`, `set()`, and `delete()` methods for 21 nodes. These methods let a user conveniently access nodes by name (see [pyEML's docs](file:///C:/Users/cwainright/OneDrive%20-%20DOI/Documents/data_projects/pyEML/docs/_build/html/index.html) for detail about which nodes you can edit with pyEML). For example:
+
+```{python}
+myemld.get_title()
+```
+```{python}
+myemld.get_keywords()
+```
+```{python}
+myemld.get_geographic_coverage()
+```
+pyEML's error classes help method calls fail gracefully and help the user solve failures. For example, if a user calls `get()` on a node at which there is no value:
+```{python}
+myemld.get_language()
+```
+
+### 4. Edit EML and view changes.
+Use the pyEML's `set` and `delete` methods to edit EML.
+
+At the end of step 3, we tried to call `get_language()`. pyEML told us that our EML document didn't have a value at the `language` node and suggested that we use the `set_language()` method. Let's use `set_language()`.
+```{python}
+myemld.set_language('english') # calls API, returns ISO language abbreviation
+```
+Whenever a user successfully `set`s a node, pyEML prints a success message and calls that node's `get` method.
+
+Maybe after step 3 we also decide that we should edit these nodes:  
+1. title  
+2. keywords  
+3. geographic coverage  
+
+1. title.  
+In real life, a user should just use `title`'s `set()` method to add a `title` or overwrite an existing `title`. For demonstration purposes, we will `delete()` the `title` node and then `set()` it.
+```{python}
+# go to interactive session
+# myemld.delete_title() # pyEML will warn a user before overwriting or deleting values at a node.
+# myemld.set_title('my new title')
+```
+
+2. keywords.  
+Now we'll update the dataset's keywords
+```{python}
+# go to interactive session
+# myemld.set_keywords('first keyword', 'second keyword') # pyEML will warn a user before overwriting or deleting values at a node.
+```
+
+3. geographic coverage.  
+
+Finally, we'll call the NPS rest services API and set our dataset's geographic coverage. The API calls are only relevant for NPS users, so a non-NPS user needs the `set_geographic_coverage()` method to define their bounding box(es) without the API calls.
+```{python}
+# go to interactive session
+# myemld.get_geographic_coverage()
+# myemld.set_nps_geographic_coverage('GWMP', 'GLAC', 'ACAD') # pyEML will warn a user before overwriting or deleting values at a node.
+```
+
+### 5. Write xml.
+Once you've made your edits, pyEML has a `write_eml()` method that saves your EML to xml:
+```{python}
+# go to interactive session
+# myemld.write_eml('data/my_metadata.xml')
+```
+
+If you decide later that you need more edits, start back at step 1 with the xml file you wrote out in step 5 as the input.
+
+# Next steps for pyEML
+### 1. Integrate pyEML with metapype
+- Metapype has good IO methods, and can read and write xml and json. This will helps with automation and (eventual) database integration.  
+- Metapype has a well-abstracted `Node` class that is similar to lxml's `Element` class (the class on which pyEML is built). This similarity will make re-structuring pyEML relatively straightforward.  
+- Metapype has a sibling package called `emlvp` that has EML validation methods and integrated EML xsd files. This will make building validation into pyEML straightforward.  
+- Charlie met with Mark Servilla (metapype author) on 4/25.  
+
+### 2. If metapype is so good, why not just use metapype?  
+- Metapype is a framework for building EML, like [ropensci/EML](https://github.com/ropensci/EML), but it doesn't have the automation or editing like [EDIorg/EMLassemblyline](https://github.com/EDIorg/EMLassemblyline) and [nationalparkservice/EMLeditor](https://github.com/nationalparkservice/EMLeditor).  
+- Metapype doesn't have methods for API calls (e.g., languages, NPS rest services, gbif/itis).  
+- Metapype can't ingest csvs of pre-digested metadata to automate node generation.  
+
+As of 20 Apr 2023, pyEML's `Emld` class is available for demonstration and the `Eml` class is not. Eventually, `Eml` will replace `Emld`. The two classes will share the same feature-methods (e.g., `get` and `set`) but will have different `__init__()` methods so users can build pyEML objects from sources besides just xml. In its final form, pyEML should enable a user to run a pyEML command that points the program at an EDD-formatted database and a config file, and pyEML should be able to build EML without further interaction.
+
+```{mermaid}
+
+classDiagram
+  class Emld{
+    + str `xml_src`: Filepath and name for the source-xml that is parsed to an element tree.
+    + bool `interactive`: Turns on status messages and overwrite detection. True is for interactive sessions. Show status messages, ask user for permission before overwriting. False is for automated scripting. Silence status messages and write metadata verbatim as scripted.
+    + lxml.etree._ElementTree `tree`: an lxml element tree containing data parsed from self.xmlstring.
+    + lxml.etree._Element `root`: the root node of self.tree.
+    + get() returns lxml.etree._Element or str, depending on `self.interactive`
+    + set() sets the value at a node (i.e., an lxml.etree._Element)
+    + delete() deletes a node (i.e., an lxml.etree._Element)
+    + print() prints `self.tree` to console
+    + write() writes `self.tree` to xml
+  }
+
+  class Eml{
+    + str `src`: Filepath and name for the source-xml that is parsed to an element tree.
+    + bool `interactive`: Turns on status messages and overwrite detection. True is for interactive sessions. Show status messages, ask user for permission before overwriting. False is for automated scripting. Silence status messages and write metadata verbatim as scripted.
+    + str `orig`: The original xml, if importing existing xml. None, if starting from scratch.
+    + metapype.model.node.Node `eml`
+    + get() returns metapype.model.node.Node or str, depending on `self.interactive`
+    + set() sets the value at a node (i.e., a metapype.model.node.Node)
+    + append() adds another child node to an existing parent node; available when max_occurs > 1 in xsd
+    + delete() deletes a node (i.e., a metapype.model.node.Node)
+    + print() prints `self.eml` to console
+    + write() writes `self.eml` to xml
+  }
+
+Emld --> Eml
+```
+
+# Architecture overview
+```{mermaid}
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '50px'}}}%%
+flowchart TB
+    %% pyEML Inputs
+    S --> T
+    T --> U
+    U --> V
+    V --> W
+    R <--> S
+    Z <--> X
+
+    X <--> N
+    X <--> O
+    X <--> P
+
+
+    X[pyEML.constants<br><br>dict of parent and node xpaths<br>lookup tables for CUI, reference styles, et al]
+    Z[metapype.names]
+    style X fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style Z fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+
+    CC(metapype.find_all_nodes_by_path)
+    AA(metapype.remove_child)
+    BB(metapype.delete_node_instance)
+
+
+    %% pyEML `Eml` class
+    C{pyEML.Eml<br><br>Attribute:Eml.eml<br>is metapype.Node:names.EML}
+
+    %% pyEML methods
+    N(pyEML get method<br><br>Feedback:<br>1. Missing node<br>2. Multiple nodes/ambiguity)
+    O(pyEML set method<br><br>Feedback:<br>1. type-check<br>2.overwrite warnings)
+    P(pyEML delete method<br><br>Feedback:<br>1. overwrite warnings)
+
+    subgraph Outputs
+    %% pyEML Outputs
+    R(pyEML.validate)
+    S(metapype.eml.validate.node:Eml.eml)
+    T(pyEML.save_xml)
+    U(metapype_io.to_xml)
+    V(lxml.etree.fromstring)
+    W(lxml.etree.ElementTree.write<br>enables xml_declaration and encoding)
+
+    style S fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style U fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style R fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style T fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style V fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+    style W fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+
+    
+    end
+    subgraph CRUD
+    CC <--> N
+    AA
+    BB <--> P
+    AA <--> P
+    N
+    O
+    P
+    N <--> P
+    
+
+    style CC fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style BB fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style AA fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style C fill:#060,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+    style N fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style O fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    style P fill:#060,stroke:#f66,stroke-width:2px,color:#fff
+    end
+    subgraph Inputs
+    DD[ezEML or EDIorg/EMLassemblyline] --> A(EML-formatted xml) --> B[metapype_io.from_xml]
+    I[sql, pandas/polars] --> F(EDD database) --> J
+    G(Start from scratch) --> J[Iterate over input<br>metapype.Node<br>metapype.add_child] 
+    K[sql, pandas/polars] --> D(Metadata source csvs) --> J
+    L(JSON) --> M[metapype_io.from_json]
+    
+
+
+    style A fill:#f9f,stroke:#333,stroke-width:4px
+    style F fill:#f9f,stroke:#333,stroke-width:4px
+    style G fill:#f9f,stroke:#333,stroke-width:4px
+    style D fill:#f9f,stroke:#333,stroke-width:4px
+    style L fill:#f9f,stroke:#333,stroke-width:4px
+
+    style M fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style B fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+    style J fill:#000,stroke:#f66,stroke-width:2px,color:#fff
+      
+    end
+
+    
+
+    CRUD <--> C
+    Inputs --> C
+    C --> Outputs
+style CRUD fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+style Inputs fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+style Outputs fill:#999,stroke:#f66,stroke-width:2px,color:#fff
+```
+
