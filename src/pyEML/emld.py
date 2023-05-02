@@ -1775,7 +1775,7 @@ class Emld():
         """Set the dataset's language
         
         Args:
-            languge (str): The language that you want to assign to your dataset. Example: 'english' or 'spanish'
+            language (str): The language that you want to assign to your dataset. Example: 'english' or 'spanish'
 
         Examples:
             myemld.set_language(language='english')
