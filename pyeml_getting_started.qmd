@@ -106,7 +106,7 @@ myemld.get_language()
 ```
 
 ### 4. Edit EML and view changes.
-Use the pyEML's `set` and `delete` methods to edit EML.
+Use pyEML's `set` and `delete` methods to edit EML.
 
 At the end of step 3, we tried to call `get_language()`. pyEML told us that our EML document didn't have a value at the `language` node and suggested that we use the `set_language()` method. Let's use `set_language()`.
 ```{python}
@@ -154,9 +154,9 @@ If you decide later that you need more edits, start back at step 1 with the xml 
 
 # Next steps for pyEML
 ### 1. Integrate pyEML with metapype
-- Metapype has good IO methods, and can read and write xml and json. This will helps with automation and (eventual) database integration.  
-- Metapype has a well-abstracted `Node` class that is similar to lxml's `Element` class (the class on which pyEML is built). This similarity will make re-structuring pyEML relatively straightforward.  
-- Metapype has a sibling package called `emlvp` that has EML validation methods and integrated EML xsd files. This will make building validation into pyEML straightforward.  
+- Metapype has good IO methods to read and write xml and json and graph its node tree to console. This will help with automation and (eventual) database integration.  
+- Metapype has a well-abstracted `Node` class that is similar to lxml's `Element` class (the class on which pyEML is currently built). This similarity will make re-structuring pyEML to rely on `Node`s relatively straightforward.  
+- Metapype has a sibling package called `emlvp` that is built to validate `Node` trees and has EML validation methods and integrated EML xsd files. This will make building validation into pyEML straightforward.  
 - Charlie met with Mark Servilla (metapype author) on 4/25.  
 
 ### 2. If metapype is so good, why not just use metapype?  
