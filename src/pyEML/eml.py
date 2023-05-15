@@ -1,25 +1,17 @@
+# import logging
+# from metapype.eml.exceptions import MetapypeRuleError
 import metapype.eml.names as names
+# import metapype.eml.validate as validate
 from metapype.model.node import Node
+# from metapype.eml import export
 from metapype.model import metapype_io
 from src.pyEML.error_classes import bcolors
 from lxml import etree
-from src.pyEML.lookups import LOOKUPS
+from src.pyEML.eml_constants import LOOKUPS
 
 class Eml():
 
     def __init__(self, filepath:str=None, INTERACTIVE:bool=True) -> None:
-        """_summary_
-        Attributes:
-            src (str): Filepath and name for the source-xml that is parsed to an element tree.
-            interactive (bool):Turns on status messages and overwrite detection. True is for interactive sessions. Show status messages, ask user for permission before overwriting. False is for automated scripting. Silence status messages and write metadata verbatim as scripted.
-            orig (str): The original xml, if importing existing xml. None, if starting from scratch.
-        Args:
-            filepath (str, optional): _description_. Defaults to None.
-            INTERACTIVE (bool, optional): _description_. Defaults to True.
-
-        Raises:
-            Exception: _description_
-        """
         try:
             self.src = filepath
             self.interactive = INTERACTIVE
@@ -32,15 +24,13 @@ class Eml():
                 if filepath.endswith('.xml'):
                     self.eml = metapype_io.from_xml(self.orig)
                     self.eml.add_attribute('system', 'metapype')
-                    msg = 'xml'
                 if filepath.endswith('.json'):
                     self.eml = metapype_io.from_json(self.orig)
                     self.eml.add_attribute('system', 'metapype')
-                    msg = 'json'
 
                 if self.orig is not None:
                     if self.interactive == True:
-                        print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}Eml{bcolors.ENDC}` created from {msg} and interactive session started.')
+                        print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}Eml{bcolors.ENDC}` created from xml file and interactive session started.')
                 else:
                     raise Exception
             else:
@@ -71,7 +61,7 @@ class Eml():
         for target in target_ids:
             target_nodes.append(self.eml.get_node_instance(target))
         for target in target_nodes:
-            self.overview(target)
+            self.show_overview(target)
 
     def set_title(self, title:str):
 
@@ -126,7 +116,7 @@ class Eml():
             print(a)
 
     
-    def overview(self, node_xpath:str=None, depth:int=0):
+    def show_overview(self, node_xpath:str=None, depth:int=0):
         """Pretty-print up to three levels of xml tags and text
 
         This method pretty-prints to console the tag structure to a max depth of three levels of tags (depth = 0, 1, 2).
@@ -139,11 +129,11 @@ class Eml():
             depth (int, optional): The depth to at which you want to start the overview. 0 starts the overview at the supplied `node_xpath`. 1 starts the overview at `node_xpath`'s children. -1 starts the overview at `node_xpath`'s parent. Defaults to 0.
 
         Examples:
-            myeml.overview()
-            myeml.overview('./dataset')
-            myeml.overview('./additionalMetadata/metadata')
-            myeml.overview('./additionalMetadata')
-            myeml.pioverview('./dataset/keywordSet')
+            myeml.show_overview()
+            myeml.show_overview('./dataset')
+            myeml.show_overview('./additionalMetadata/metadata')
+            myeml.show_overview('./additionalMetadata')
+            myeml.show_overview('./dataset/keywordSet')
         """
         if node_xpath is None:
             node = self.eml

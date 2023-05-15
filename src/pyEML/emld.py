@@ -13,7 +13,7 @@ License: MIT, license information at end of file
 
 import lxml.etree as etree
 from src.pyEML.error_classes import bcolors, MissingNodeException, InvalidDataStructure
-from src.pyEML.constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES, AVAILABLE_ATTRIBUTES
+from src.pyEML.emld_constants import LOOKUPS, CUI_CHOICES, LICENSE_TEXT, CURRENT_RELEASE, APP_NAME, NPS_DOI_ADDRESS, CITATION_STYLES, AVAILABLE_ATTRIBUTES
 from datetime import datetime
 import iso639
 import urllib
