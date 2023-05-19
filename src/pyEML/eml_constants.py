@@ -10,6 +10,29 @@ LOOKUPS = {
         'parent': [
             names.DATASET
         ],
-        'target': 'title'
+        'target': 'title',
+        'values_dict': {
+            'title': None
+            }
+    },
+    'creator': {
+        'path': [
+            names.DATASET,
+            names.CREATOR
+        ],
+        'parent': [
+            names.DATASET
+        ],
+        'target': 'creator',
+        'values_dict': {
+            'creator': {
+                'individualName': {
+                'givenName': None,
+                'surName': None
+            },
+            'organizationName': None,
+            'electronicMailAddress': None
+            }
+        }
     }
 }
