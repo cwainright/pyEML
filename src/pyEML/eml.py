@@ -76,11 +76,21 @@ class Eml():
             path = LOOKUPS['title']['path']
             parent = LOOKUPS['title']['parent']
             target = LOOKUPS['title']['target']
-
+            values = LOOKUPS['title']['values']
+            
             assert title not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". `{target}` cannot be blank.'
             assert len(title) >= 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". {bcolors.BOLD}`{target}`{bcolors.ENDC} must be at least three characters.'
 
-            self._set_node()
+            values['title'] = title
+            self._set_node(path=path, parent=parent, values=values, target=target, append=False)
+
+            # nodes = self.eml.find_all_nodes_by_path(path=path)
+            # parents = self.eml.find_all_nodes_by_path(path=parent)
+            # assert len(parents) == 1, print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\nReturned multiple parent{bcolors.BOLD}`node`{bcolors.ENDC}s:\n')
+            # parent = parents[0]
+
+            # new_node = Node(path[-1])
+            # new_node.content = title
 
         except AssertionError as a:
             print(a)
@@ -211,8 +221,43 @@ class Eml():
                     self._show_overview(child, depth+1)
             print(f'{spaces}</{node.name}>')
 
-    def _set_node():
-        pass
+    def _set_node(self, path:list, parent:list, values:list, target:str, append:bool):
+        """Set the values at a node
+
+        Args:
+            values (list): A list of dictionaries. Dict keys map to xml tag names. Dict values map to xml text.
+        """
+        try:
+            nodes = self.eml.find_all_nodes_by_path(path=path)
+            parents = self.eml.find_all_nodes_by_path(path=parent)
+            assert len(parents) == 1, print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\nReturned multiple parent{bcolors.BOLD}`node`{bcolors.ENDC}s.\n')
+            
+            if self.interactive == True:
+                quiet = False
+                pretty = True
+            else:
+                quiet = True
+                pretty = False
+            
+            if append == False:
+                if len(nodes) != 0:
+                    self._delete_node(path=path, parent=parent, target=target, quiet=quiet)
+            
+            parent = parents[0]
+
+            # write a recursive function to build nodes
+            # need to re-work emld._serialize_nodes()
+            for _ in range(0, len(values)):
+                name = list(values.keys())[0]
+                new_node = Node(name)
+                new_node.content = values['title'] 
+                parent.add_child(new_node)
+
+            if self.interactive == True:
+                print('success')
+                self._get_node(path=path, target=target, pretty=pretty, quiet=quiet)
+        except:
+            pass
 
     def _delete_node(self, path:list, parent:list, target:str, quiet:bool):
         try:

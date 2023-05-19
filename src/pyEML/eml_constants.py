@@ -11,7 +11,7 @@ LOOKUPS = {
             names.DATASET
         ],
         'target': 'title',
-        'values_dict': {
+        'values': {
             'title': None
             }
     },
@@ -24,7 +24,7 @@ LOOKUPS = {
             names.DATASET
         ],
         'target': 'creator',
-        'values_dict': {
+        'values': {
             'creator': {
                 'individualName': {
                 'givenName': None,
