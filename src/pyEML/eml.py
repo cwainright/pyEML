@@ -5,7 +5,7 @@ import metapype.eml.names as names
 from metapype.model.node import Node
 # from metapype.eml import export
 from metapype.model import metapype_io
-from src.pyEML.error_classes import bcolors
+from src.pyEML.error_classes import bcolors, MissingNodeException
 from lxml import etree
 from src.pyEML.eml_constants import LOOKUPS
 
@@ -52,22 +52,40 @@ class Eml():
     def get_title(self):
         """Get the dataset's title node(s)
         """
+
         path = LOOKUPS['title']['path']
-        nodes = self.eml.find_all_nodes_by_path(path=path)
-        target_ids = []
-        for target in nodes:
-            target_ids.append(target.id)
-        target_nodes = []
-        for target in target_ids:
-            target_nodes.append(self.eml.get_node_instance(target))
-        for target in target_nodes:
-            self.show_overview(target)
+        target = LOOKUPS['title']['target']
+
+        if self.interactive == True:
+            pretty=True
+            quiet=False
+            self._get_node(path=path, target=target, pretty=pretty, quiet=quiet)
+        else:
+            pretty=False
+            quiet=True
+            node = self._get_node(path=path, target=target, pretty=pretty, quiet=quiet)
+            if node: # only returns an object if pretty == False
+                return node
+
+        # nodes = self.eml.find_all_nodes_by_path(path=path)
+        # target_ids = []
+        # for target in nodes:
+        #     target_ids.append(target.id)
+        # target_nodes = []
+        # for target in target_ids:
+        #     target_nodes.append(self.eml.get_node_instance(target))
+        # for target in target_nodes:
+        #     self.show_overview(target)
 
     def set_title(self, title:str):
 
         try:
             path = LOOKUPS['title']['path']
             parent = LOOKUPS['title']['parent']
+            node_target = LOOKUPS['title']['node_target']
+
+            assert title not in ('', None), f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". `{node_target}` cannot be blank.'
+            assert len(title) >= 3, f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}You provided "{title}". {bcolors.BOLD}`{node_target}`{bcolors.ENDC} must be at least three characters.'
 
             nodes = self.eml.find_all_nodes_by_path(path=path)
             parents = self.eml.find_all_nodes_by_path(path=parent)
@@ -115,7 +133,6 @@ class Eml():
         except AssertionError as a:
             print(a)
 
-    
     def show_overview(self, node_xpath:str=None, depth:int=0):
         """Pretty-print up to three levels of xml tags and text
 
@@ -170,6 +187,51 @@ class Eml():
                     self._show_overview(child, depth+1)
             print(f'{spaces}</{node.name}>')
 
+    def _set_node():
+        pass
+
+    def _delete_node():
+        pass
+
+    def _get_node(self, path:list, target:str, pretty:bool, quiet:bool):
+        # nodes = self.eml.find_all_nodes_by_path(path=path)
+        # target_ids = []
+        # for target in nodes:
+        #     target_ids.append(target.id)
+        # target_nodes = []
+        # for target in target_ids:
+        #     target_nodes.append(self.eml.get_node_instance(target))
+        # for target in target_nodes:
+        #     self.show_overview(target)
+
+        try:
+            # collect all nodes at `path`
+            nodes = self.eml.find_all_nodes_by_path(path=path)
+            target_ids = []
+            for target in nodes:
+                target_ids.append(target.id)
+            target_nodes = []
+            for target in target_ids:
+                target_nodes.append(self.eml.get_node_instance(target))
+            
+            # check that nodes were returned
+            if len(target_nodes) == 0:
+                raise MissingNodeException(target)
+            else:
+                node_xpath = './' + '/'.join(path) # build xpath string from `path`
+                if pretty == True:
+                    if len(target_nodes) == 1:
+                        self.show_overview(node_xpath)
+                    else:
+                        print(f'Metadata package contains {len(target_nodes)} `{bcolors.BOLD}{target}{bcolors.ENDC}` nodes:')
+                        print('----------')
+                        self.show_overview(node_xpath)
+                else:
+                    return target_nodes
+        except MissingNodeException as e:
+            if quiet == False:
+                print(e.msg)
+    
     def save_xml(self, filename:str):
         """Save a metadata model to .xml
 

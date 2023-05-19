@@ -9,6 +9,7 @@ LOOKUPS = {
         ],
         'parent': [
             names.DATASET
-        ]
+        ],
+        'target': 'title'
     }
 }
