@@ -78,4 +78,27 @@ class InvalidDataStructure(Exception):
         self.msg = bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE + 'Process execution failed.\n' + bcolors.ENDC \
             + bcolors.FAIL + f'\n`{problem_val}`' + bcolors.FAIL + ' does not exist. \n'\
             + bcolors.OKBLUE + f'Enter a value for `{problem_val}` with ' + f'`set_{problem_val}()`' + bcolors.ENDC
+
+class AllBlanks(Exception):
+    '''Custom error handling for creating empty class instances
+
+    Args:
+        Exception (class): parent class
+    
+    Examples:
+        try:
+            yourcreator = Creator()
+            raise AllBlanks()
+        except AllBlanks as e:
+            print(e.msg)
+    '''
+
+    def __init__(self):
+        '''Produces `self.msg` which is a str that is printed to console via `print_problem()` for interactive sessions
+
+        Args:
+            problem_val (str): Node that failed validation and raised the `InvalidDataStructure`. Used to produce f-strings in `self.msg`.
+        '''
+        self.msg = bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE + 'Process execution failed.\n' + bcolors.ENDC +\
+            bcolors.FAIL + 'You entered blanks for all attributes. You must enter a value for at least one attribute. \n' + bcolors.ENDC
     
