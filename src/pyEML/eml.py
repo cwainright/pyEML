@@ -7,7 +7,7 @@ from metapype.model.node import Node
 from metapype.model import metapype_io
 from src.pyEML.error_classes import bcolors, MissingNodeException
 from lxml import etree
-from src.pyEML.eml_constants import LOOKUPS
+from src.pyEML.eml_constants import LOOKUPS, Creator, EmlNode, EmlNodeSet
 
 class Eml():
 
@@ -24,6 +24,8 @@ class Eml():
                 if filepath.endswith('.xml'):
                     self.eml = metapype_io.from_xml(self.orig)
                     self.eml.add_attribute('system', 'metapype')
+                    # self.eml = EmlNode(metapype_io.from_xml(self.orig))
+                    # self.eml.add_attribute('system', 'metapype')
                 if filepath.endswith('.json'):
                     self.eml = metapype_io.from_json(self.orig)
                     self.eml.add_attribute('system', 'metapype')
@@ -39,6 +41,15 @@ class Eml():
 
                 if self.interactive == True:
                     print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}Empty `{bcolors.BOLD}Eml{bcolors.ENDC}` created and interactive session started.')
+            
+            self.creator = self._get_node(path=LOOKUPS['creator']['path'], target=LOOKUPS['creator']['target'], pretty=False, quiet=True)
+            self.creator = EmlNodeSet(self.creator)
+            for c in self.creator:
+                c.__class__ = EmlNode
+            self.title = self._get_node(path=LOOKUPS['title']['path'], target=LOOKUPS['title']['target'], pretty=False, quiet=True)
+            self.title = EmlNodeSet(self.title)
+            for c in self.title:
+                c.__class__ = EmlNode
 
         except TypeError as t:
             print(t)
@@ -48,6 +59,17 @@ class Eml():
             print(a)
         except:
             print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\n{bcolors.BOLD}`Eml`{bcolors.ENDC} not created.')
+
+    def add(self, value:Node, overwrite:bool=False):
+        """An abstracted way to add a node
+
+        This is basically node.add_child(child_node)
+        """
+        pass
+
+    def delete(self):
+        pass
+
 
     def get_title(self):
         """Get the dataset's title node(s)"""
@@ -134,14 +156,35 @@ class Eml():
             if node: # only returns an object if pretty == False
                 return node
 
-    def set_creator(self, creators:dict, append:bool=False):
+    def set_creator(self, *creators:Creator, append:bool=False):
         """Delete the dataset's creator node(s)
 
         Args:
-            creators (dict): A dictionary of creator names and contact information.
+            creators (src.pyEML.eml_constants.Creator): Arbitrary arg. Any number of `Creator` instances.
             append (bool, optional): True will append `creators` dictionary to existing creators records. False will replace existing creators records with `creators` dict. Defaults to False.
         """
-        pass
+        try:
+            path = LOOKUPS['creator']['path']
+            target = LOOKUPS['creator']['target']
+            parent = LOOKUPS['creator']['parent']
+
+
+            if self.interactive == True:
+                quiet = False
+            else:
+                quiet = True
+            if append == False:
+                self.delete_creator()
+            parents = self._get_node(self, path=parent, target=target, pretty=False, quiet=quiet)
+
+            assert isinstance(parents, list), print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\nParent nodes did not return list{bcolors.BOLD}`node`{bcolors.ENDC}s.\n')
+            assert len(parents) == 1, print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\nReturned multiple parent{bcolors.BOLD}`node`{bcolors.ENDC}s.\n')
+            parent_node = parents[0]
+            for _ in creators:
+                parent_node.add_child(_)
+
+        except:
+            print('error set_creator()')
 
     def delete_creator(self):
         """Delete the dataset's creator node(s)
@@ -167,12 +210,12 @@ class Eml():
         except:
             print('error delete_creator()') 
 
-    def show_overview(self, node_xpath:str=None, depth:int=0):
+    def show(self, node_xpath:str=None, depth:int=0):
         """Pretty-print up to three levels of xml tags and text
 
         This method pretty-prints to console the tag structure to a max depth of three levels of tags (depth = 0, 1, 2).
         This shows a user their element tree structure without details like deeply-nested nodes, namespaces, and attributes.
-        `show_overview()` is good for simply checking an element tree's structure or confirming that a `set` or `delete` method worked.
+        `show()` is good for simply checking an element tree's structure or confirming that a `set` or `delete` method worked.
         If you want the full-detail of your element tree, use `pretty_print()` or `save_xml()`.
 
         Args:
@@ -180,15 +223,15 @@ class Eml():
             depth (int, optional): The depth to at which you want to start the overview. 0 starts the overview at the supplied `node_xpath`. 1 starts the overview at `node_xpath`'s children. -1 starts the overview at `node_xpath`'s parent. Defaults to 0.
 
         Examples:
-            myeml.show_overview()
-            myeml.show_overview('./dataset')
-            myeml.show_overview('./additionalMetadata/metadata')
-            myeml.show_overview('./additionalMetadata')
-            myeml.show_overview('./dataset/keywordSet')
+            myeml.show()
+            myeml.show('./dataset')
+            myeml.show('./additionalMetadata/metadata')
+            myeml.show('./additionalMetadata')
+            myeml.show('./dataset/keywordSet')
         """
         if node_xpath is None:
             node = self.eml
-            self._show_overview(node=node, depth=depth)
+            self._show(node=node, depth=depth)
         if isinstance(node_xpath, str):
             assert node_xpath.startswith('./'), print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\n{bcolors.BOLD}`node_xpath`{bcolors.ENDC}, if supplied, must begin with "./"\n')
             node_xpath = node_xpath.replace('./', '')
@@ -198,15 +241,18 @@ class Eml():
             node = self.eml.find_all_nodes_by_path(node)
         
             for n in node:
-                self._show_overview(node=n, depth=depth)
+                self._show(node=n, depth=depth)
         elif isinstance(node_xpath, Node):
-            self._show_overview(node=node_xpath, depth=depth)
+            self._show(node=node_xpath, depth=depth)
+        elif isinstance(node_xpath, list):
+            for n in node_xpath:
+                self._show(node=n, depth=depth)
     
-    def _show_overview(self, node:Node, depth:int):
-        """The recursive part of show_overview()
+    def _show(self, node:Node, depth:int):
+        """The recursive part of show()
 
         Args:
-            node (Node): The metapype.model.node.Node at which the overview should start. 
+            node (:obj:`Node` or :obj:`list` of :obj:`Node`): The metapype.model.node.Node at which the overview should start. 
             depth (int): The depth to at which you want to start the overview. 0 starts the overview at the supplied `node_xpath`. 1 starts the overview at `node_xpath`'s children. -1 starts the overview at `node_xpath`'s parent. Defaults to 0.
         """
         if depth < 3:
@@ -218,7 +264,7 @@ class Eml():
             else:
                 for child in node.children:
                     print(f'{spaces}    <{child.name}>')
-                    self._show_overview(child, depth+1)
+                    self._show(child, depth+1)
             print(f'{spaces}</{node.name}>')
 
     def _set_node(self, path:list, parent:list, values:list, target:str, append:bool):
@@ -333,14 +379,14 @@ class Eml():
             if len(target_nodes) == 0:
                 raise MissingNodeException(target)
             else:
-                node_xpath = './' + '/'.join(path) # build xpath string from `path`
                 if pretty == True:
+                    node_xpath = './' + '/'.join(path) # build xpath string from `path`
                     if len(target_nodes) == 1:
-                        self.show_overview(node_xpath)
+                        self.show(node_xpath)
                     else:
                         print(f'Metadata package contains {len(target_nodes)} `{bcolors.BOLD}{target}{bcolors.ENDC}` nodes:')
                         print('----------')
-                        self.show_overview(node_xpath)
+                        self.show(node_xpath)
                 else:
                     return target_nodes
         except MissingNodeException as e:
