@@ -66,9 +66,21 @@ class EmlNode(Node):
         pass
     
     def __repr__(self) -> str:
-        repr = self.show()
+        repr = self._show()
         return repr
         
+    def _show(self, mystr:str='', depth:int=0):
+        if depth < 3:
+            spaces = '    ' * depth
+            if len(self.children) == 0:
+                mystr += f'{spaces}<{self.name}>{self.content}</{self.name}>'
+                return mystr
+            else:
+                mystr += f'{spaces}<{self.name}>'
+                for child in self.children:
+                    self.show(child, depth+1)
+                mystr += f'{spaces}</{self.name}>'
+    
     def show(self, depth:int=0):
         """Recursive pretty-printing of nodes
 
@@ -103,6 +115,13 @@ class EmlNodeSet(list):
         """
         super().__init__(list_of_nodes)
 
+    def __repr__(self) -> str:
+        repr = ''
+        for i in self:
+            repr += i._show()
+        return repr
+
+    
     def show(self, depth:int=0):
         for n in self:
             n.show()
