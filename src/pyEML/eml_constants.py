@@ -65,33 +65,26 @@ class EmlNode(Node):
     def __init__(self):
         pass
     
-    def __repr__(self):
-        self.show()
+    def __repr__(self) -> str:
+        repr = self.show()
+        return repr
         
-    def show(self):
-        self._show(node=self, depth=0)
-        # myxml = metapype_io.to_xml(self)
-        # root = etree.fromstring(myxml)
-        # print(etree.tostring(root, pretty_print=True).decode())
-
-    def _show(self, node:Node, depth:int):
-        """The recursive part of show()
+    def show(self, depth:int=0):
+        """Recursive pretty-printing of nodes
 
         Args:
-            node (Node): The metapype.model.node.Node at which the overview should start. 
-            depth (int): The depth to at which you want to start the overview. 0 starts the overview at the supplied `node_xpath`. 1 starts the overview at `node_xpath`'s children. -1 starts the overview at `node_xpath`'s parent. Defaults to 0.
+            node (src.pyEML.eml_constants.EmlNode): The Eml node at which the recursion should start. 
+            depth (int): The depth to at which you want to start the overview. 0 starts the overview at the supplied `EmlNode`. 1 starts the overview at `node`'s children. -1 starts the overview at `node`'s parent. Defaults to 0.
         """
         if depth < 3:
             spaces = '    ' * depth
-            if depth == 0:
-                print(f'{spaces}<{node.name}>')
-            if len(node.children) == 0:
-                print(f'{spaces}    {node.content}')
+            if len(self.children) == 0:
+                print(f'{spaces}<{self.name}>{self.content}</{self.name}>')
             else:
-                for child in node.children:
-                    print(f'{spaces}    <{child.name}>')
-                    self._show(child, depth+1)
-            print(f'{spaces}</{node.name}>')
+                print(f'{spaces}<{self.name}>')
+                for child in self.children:
+                    self.show(child, depth+1)
+                print(f'{spaces}</{self.name}>')
 
 # this assigns the method to the class definition
 # EmlNode.show = MethodType(show, EmlNode)
@@ -110,12 +103,16 @@ class EmlNodeSet(list):
         """
         super().__init__(list_of_nodes)
 
-    def show(self):
-        # self._show(node=self.node, depth=0)
-        for _ in self:
-            myxml = metapype_io.to_xml(_)
-            root = etree.fromstring(myxml)
-            print(etree.tostring(root, pretty_print=True).decode())
+    def show(self, depth:int=0):
+        for n in self:
+            n.show()
+    
+    # def show(self):
+    #     # self._show(node=self.node, depth=0)
+    #     for _ in self:
+    #         myxml = metapype_io.to_xml(_)
+    #         root = etree.fromstring(myxml)
+    #         print(etree.tostring(root, pretty_print=True).decode())
 
 class Creator(EmlNode):
     """Abstraction of EML dataset.creator node
