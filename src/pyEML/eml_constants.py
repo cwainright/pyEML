@@ -73,13 +73,14 @@ class EmlNode(Node):
         if depth < 3:
             spaces = '    ' * depth
             if len(self.children) == 0:
-                mystr += f'{spaces}<{self.name}>{self.content}</{self.name}>'
-                return mystr
+                new_part = f'{spaces}<{self.name}>{self.content}</{self.name}>\n'
+                return new_part
             else:
-                mystr += f'{spaces}<{self.name}>'
+                # mystr += f'{spaces}<{self.name}>\n'
                 for child in self.children:
-                    self.show(child, depth+1)
-                mystr += f'{spaces}</{self.name}>'
+                    mystr += child._show(mystr, depth+1)
+                mystr += f'{spaces}</{self.name}>\n'
+        return f'{spaces}<{self.name}>\n' + mystr 
     
     def show(self, depth:int=0):
         """Recursive pretty-printing of nodes
@@ -117,14 +118,30 @@ class EmlNodeSet(list):
 
     def __repr__(self) -> str:
         repr = ''
-        for i in self:
-            repr += i._show()
+        for elm in self:
+            repr += elm.__repr__()
         return repr
 
     
     def show(self, depth:int=0):
         for n in self:
-            n.show()
+            print(n.__repr__())
+
+    def add(self, value:EmlNode, overwrite:bool=False):
+        """Add an EmlNode or EmlNodeSet as a child of an EmlNode
+
+        This is basically node.add_child(child_node)
+        """
+        pass
+
+    def delete(self):
+        """Delete an EmlNode or EmlNodeSet from an EmlNode
+        this is basically Eml._delete_node()
+        """
+        pass
+
+    def edit(self):
+        pass
     
     # def show(self):
     #     # self._show(node=self.node, depth=0)

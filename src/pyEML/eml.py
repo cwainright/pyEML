@@ -9,6 +9,24 @@ from src.pyEML.error_classes import bcolors, MissingNodeException
 from lxml import etree
 from src.pyEML.eml_constants import LOOKUPS, Creator, EmlNode, EmlNodeSet
 
+def _nodeset(nodeset):
+        """Ingest an `EmlNodeSet`, `EmlNode`, or `metapype.model.node.Node` instance and recursively changes it and all of its children to `EmlNode` instances
+
+        Args:
+            nodeset (EmlNodeSet): _description_
+        """
+        if isinstance(nodeset, EmlNodeSet):
+            for node in nodeset:
+                node.__class__ = EmlNode
+                if len(node.children) !=0:
+                    for child in node.children:
+                        _nodeset(child)
+        elif isinstance(nodeset, Node):
+            nodeset.__class__ = EmlNode
+            if len(nodeset.children) !=0:
+                    for child in nodeset.children:
+                        _nodeset(child)
+
 class Eml():
 
     def __init__(self, filepath:str=None, INTERACTIVE:bool=True) -> None:
@@ -35,22 +53,27 @@ class Eml():
                         print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}`{bcolors.BOLD}Eml{bcolors.ENDC}` created from xml file and interactive session started.')
                 else:
                     raise Exception
+                
+                _nodeset(self.eml) # update the class of self.eml and all of its child nodes
+
+                # Business logic: allow a user to edit sets of nodes.
+                # e.g., a user may want to add a "creator" to their metadata.
+                # The user doesn't mean that they want to add `Node('creator')`.
+                # The user wants to add data to creator.individualName.givenName, creator.individualName.surName, creator.electronicMailAddress...
+                # These 'sets of nodes' are abstracted to the `EmlNodeSet` class and stored in the Eml() instance.
+                # EML data integrity rules for node sets are enforced on creation of `EmlNodeSet` sub-classes like `Creator()` and `Title()`.
+                self.creators = self._get_node(path=LOOKUPS['creator']['path'], target=LOOKUPS['creator']['target'], pretty=False, quiet=True)
+                self.creators = EmlNodeSet(self.creators)
+                self.title = self._get_node(path=LOOKUPS['title']['path'], target=LOOKUPS['title']['target'], pretty=False, quiet=True)
+                self.title = EmlNodeSet(self.title)
             else:
                 self.eml = Node(names.EML)
+                _nodeset(self.eml)
                 self.eml.add_attribute('system', 'metapype')
 
                 if self.interactive == True:
                     print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!\n\n{bcolors.ENDC}Empty `{bcolors.BOLD}Eml{bcolors.ENDC}` created and interactive session started.')
             
-            self.creator = self._get_node(path=LOOKUPS['creator']['path'], target=LOOKUPS['creator']['target'], pretty=False, quiet=True)
-            self.creator = EmlNodeSet(self.creator)
-            for c in self.creator:
-                c.__class__ = EmlNode
-            self.title = self._get_node(path=LOOKUPS['title']['path'], target=LOOKUPS['title']['target'], pretty=False, quiet=True)
-            self.title = EmlNodeSet(self.title)
-            for c in self.title:
-                c.__class__ = EmlNode
-
         except TypeError as t:
             print(t)
         except ValueError as v:
@@ -60,17 +83,8 @@ class Eml():
         except:
             print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\n{bcolors.BOLD}`Eml`{bcolors.ENDC} not created.')
 
-    def add(self, value:Node, overwrite:bool=False):
-        """An abstracted way to add a node
 
-        This is basically node.add_child(child_node)
-        """
-        pass
-
-    def delete(self):
-        pass
-
-
+    
     def get_title(self):
         """Get the dataset's title node(s)"""
 
