@@ -422,7 +422,7 @@ class Eml():
         except AssertionError as a:
             print(a)
     
-    def pretty_print(self, node:Node=None):
+    def print(self, node:Node=None):
         if node is None:
             myxml = metapype_io.to_xml(self.eml)
             root = etree.fromstring(myxml)
