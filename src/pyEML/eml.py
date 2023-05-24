@@ -383,11 +383,11 @@ class Eml():
             # collect all nodes at `path`
             nodes = self.eml.find_all_nodes_by_path(path=path)
             target_ids = []
-            for target in nodes:
-                target_ids.append(target.id)
+            for t in nodes:
+                target_ids.append(t.id)
             target_nodes = []
-            for target in target_ids:
-                target_nodes.append(self.eml.get_node_instance(target))
+            for t in target_ids:
+                target_nodes.append(self.eml.get_node_instance(t))
             
             # check that nodes were returned
             if len(target_nodes) == 0:
@@ -431,4 +431,33 @@ class Eml():
             myxml = metapype_io.to_xml(node)
             root = etree.fromstring(myxml)
             print(etree.tostring(root, pretty_print=True).decode())
+
+    def add(self, node:Creator):
+        try:
+            parents = self._get_node(path=node.parent, target=node.target, pretty=False, quiet=False)
+            assert len(parents) == 1, print(f'{bcolors.FAIL + bcolors.BOLD + bcolors.UNDERLINE}Process execution failed.\n{bcolors.ENDC}\nReturned multiple parent{bcolors.BOLD}`node`{bcolors.ENDC}s.\n')
+            parent = parents[0]
+
+            parent.add_child(node.node)
+
+            if isinstance(node, Creator):
+                self.creators = self._get_node(path=node.path, target=node.target, pretty=False, quiet=False)
+                self.creators = EmlNodeSet(self.creators)
+
+            
+            if self.interactive == True:
+                print(f'\n{bcolors.OKBLUE + bcolors.BOLD + bcolors.UNDERLINE}Success!{bcolors.ENDC}`{bcolors.BOLD}{node.target}{bcolors.ENDC}` added.\n')
+                nodes = self._get_node(path=node.path, target=node.target, pretty=False, quiet=False)
+                if len(nodes) == 1:
+                    word = 'node'
+                elif len(nodes) >1:
+                    word = 'nodes'
+                print(f'Metadata package contains {len(nodes)} `{bcolors.BOLD}{node.target}{bcolors.ENDC}` {word}:')
+                print('----------')
+                for n in nodes:
+                    print(n.__repr__())
+
+        except AssertionError as a:
+            print(a)
+
         

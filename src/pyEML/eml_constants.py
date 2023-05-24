@@ -118,8 +118,9 @@ class EmlNodeSet(list):
 
     def __repr__(self) -> str:
         repr = ''
+        repr += f'{len(self)} nodes:\n----------\n'
         for elm in self:
-            repr += elm.__repr__()
+            repr += elm.__repr__() + '\n'
         return repr
 
     
@@ -150,8 +151,8 @@ class EmlNodeSet(list):
     #         root = etree.fromstring(myxml)
     #         print(etree.tostring(root, pretty_print=True).decode())
 
-class Creator(EmlNode):
-    """Abstraction of EML dataset.creator node
+class Creator():
+    """Abstraction of eml.dataset.creator node
 
     Inherits:
         EmlNode (cls): Parent class for Eml Nodes.
@@ -160,34 +161,41 @@ class Creator(EmlNode):
         try:
             if all(v is None for v in [first, last, email, org]): raise AllBlanks
             self.node = Node('creator')
-            self.attrs = {
+            self.node.__class__ = EmlNode
+            self.parent = LOOKUPS['creator']['parent']
+            self.target = LOOKUPS['creator']['target']
+            self.path = LOOKUPS['creator']['path']
+            dirty_attrs = {
                 'first': first,
                 'last': last,
                 'org': org,
                 'email': email
             }
-
-            clean_attrs = {}
-            for k,v in self.attrs.items():
+            self.attrs = {}
+            for k,v in dirty_attrs.items():
                 if v != None:
-                    clean_attrs[k] = v
+                    self.attrs[k] = v
 
-            if 'first' or 'last' in clean_attrs.keys():
+            if 'first' or 'last' in self.attrs.keys():
                 indiv_node = Node('individualName')
+                indiv_node.__class__ = EmlNode
                 self.node.add_child(indiv_node)
-            if 'first' in clean_attrs.keys():
+            if 'first' in self.attrs.keys():
                 first_node = Node('givenName')
+                first_node.__class__ = EmlNode
                 indiv_node.add_child(first_node)
-                first_node.content = clean_attrs['first']
-                del clean_attrs['first']
-            if 'last' in clean_attrs.keys():
+                first_node.content = self.attrs['first']
+                del self.attrs['first']
+            if 'last' in self.attrs.keys():
                 last_node = Node('surName')
+                last_node.__class__ = EmlNode
                 indiv_node.add_child(last_node)
-                last_node.content = clean_attrs['last']
-                del clean_attrs['last']
+                last_node.content = self.attrs['last']
+                del self.attrs['last']
 
-            for k, v in clean_attrs:
+            for k, v in self.attrs:
                 new_node = Node(k)
+                new_node.__class__ = EmlNode
                 new_node.content = v
                 self.node.add_child(new_node)
 
